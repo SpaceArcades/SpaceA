@@ -1760,17 +1760,16 @@
     /* NAVIGATION TABS */
 
     function showSection(section) {
-
       const isEdit = section === "edit";
-
       document.getElementById("editSection").classList.toggle("hidden", !isEdit);
-
       document.getElementById("gamesSection").classList.toggle("hidden", isEdit);
-
       document.getElementById("editTab").classList.toggle("active", isEdit);
-
       document.getElementById("gamesTab").classList.toggle("active", !isEdit);
-
+      // If Games is selected, return to the catalogue rather than a stale player view.
+      if (!isEdit && !currentGameKey) {
+        gamePlayerView.classList.add("hidden");
+        gameCatalogView.classList.remove("hidden");
+      }
     }
 
     document.getElementById("editTab").addEventListener("click", () => showSection("edit"));
@@ -1827,27 +1826,31 @@
     }
 
     function closeGame() {
-
+      // Stop and remove the embedded game before returning to the catalogue.
+      // Keep this function safe even if optional UI elements are absent.
       currentGameKey = null;
       gamePlayerFrame.replaceChildren();
-      document.getElementById('cookie-save-note').classList.add('hidden');
-      document.getElementById('gameOpenTabBtn').classList.remove('hidden');
-      document.getElementById('gameFullscreenBtn').classList.remove('hidden');
 
       gamePlayerView.classList.add("hidden");
-
       gameCatalogView.classList.remove("hidden");
 
-      // Resume background music if user originally played music
+      const openTabButton = document.getElementById("gameOpenTabBtn");
+      const fullscreenButton = document.getElementById("gameFullscreenBtn");
+      const refreshButton = document.getElementById("gameRefreshBtn");
+      const volumeButton = document.getElementById("gameVolumeBtn");
+      if (openTabButton) openTabButton.classList.remove("hidden");
+      if (fullscreenButton) fullscreenButton.classList.remove("hidden");
+      if (refreshButton) refreshButton.classList.remove("hidden");
+      if (volumeButton) volumeButton.classList.remove("hidden");
 
+      // Resume the arcade music only if the user had enabled it.
       if (userWantsMusic) {
-
-        audio.play();
-
-        playBtn.textContent = '❚❚';
-
+        audio.play().then(() => {
+          playBtn.textContent = "❚❚";
+        }).catch(() => {
+          playBtn.textContent = "▶";
+        });
       }
-
     }
 
     document.getElementById("slopeGameCard").addEventListener("click", () => openGame("slope"));
