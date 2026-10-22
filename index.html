@@ -1308,7 +1308,7 @@
 
             </button>
 
-            <button class="game-card coming-soon-card" type="button" id="minecraftGameCard" aria-disabled="true">
+            <button class="game-card" type="button" id="minecraftGameCard">
               <img class="game-thumbnail" src="mc.png" alt="Minecraft" onerror="this.style.display='none'">
               <div class="game-card-body">
                 <h3>Minecraft</h3>
@@ -1643,9 +1643,8 @@
     const games = {
       slope: { title: "Slope", url: "https://slopesunblocked.io/" },
       spaceWaves: { title: "Space Waves", url: "https://www.crazygames.com/embed/space-waves" },
-      // MinePlay is the selected browser-playable Minecraft source.
-      // If the provider blocks iframe embedding, use "Open in new tab".
-      minecraft: { title: "Minecraft", url: "https://mineplay.io/play/26.3" },
+      // Eaglercraft browser-playable Minecraft. If embedding is blocked, use "Open in new tab".
+      minecraft: { title: "Minecraft", url: "https://dev.eaglercraft.com/play" },
       granny: { title: "Granny", url: "https://grannyonline.io/" },
 
       // Alternative browser-playable HTML5 ports. Some providers may restrict iframe embedding.
@@ -1833,7 +1832,7 @@ function openGame(gameKey) {
       gamePlayerView.classList.remove('hidden');
     }
 
-    document.getElementById("minecraftGameCard").addEventListener("click", openComingSoon);
+    document.getElementById("minecraftGameCard").addEventListener("click", () => openGame("minecraft"));
     document.getElementById("grannyGameCard").addEventListener("click", () => openGame("granny"));
     document.getElementById("fnaf1GameCard").addEventListener("click", () => openGame("fnaf1"));
     document.getElementById("sonicCDGameCard").addEventListener("click", () => openGame("sonicCD"));
