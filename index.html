@@ -1328,14 +1328,6 @@
 
 
 
-            <button class="game-card" type="button" id="marioGameCard">
-              <div class="game-card-body"><h3>Super Mario</h3></div>
-            </button>
-
-            <button class="game-card" type="button" id="cookieClickerGameCard">
-              <div class="game-card-body"><h3>Cookie Clicker</h3></div>
-            </button>
-
             <button class="game-card" type="button" id="fnaf3GameCard">
               <img class="game-thumbnail" src="fnaf3.png" alt="Five Nights at Freddy's 3" onerror="this.style.display='none'">
               <div class="game-card-body"><h3>FNAF 3</h3></div>
@@ -1367,7 +1359,6 @@
             <button class="game-back-btn" id="gameBackBtn" type="button">← Back to Catalog</button>
 
             <div class="game-player-title" id="gamePlayerTitle">Game Title</div>
-            <div id="cookie-save-note" class="cookie-save-note hidden">Cookie Clicker is embedded here. Progress may save in this browser, but privacy settings or the game host can affect saving in an embed. Use Options → Export Save to make a backup. If the game does not load, use “Open in new tab.”</div>
 
             <button class="game-fullscreen-btn" id="gameOpenTabBtn" type="button">Open in new tab ↗</button>
             <button class="game-fullscreen-btn" id="gameFullscreenBtn" type="button">Fullscreen ⛶</button>
@@ -1659,8 +1650,6 @@
       fnaf1: { title: "FNAF 1", url: "https://fnaf1.io/" },
       fnaf2: { title: "FNAF 2", url: "https://fnaf1.io/fnaf-2" },
       fnaf3: { title: "FNAF 3", url: "https://fnaf1.io/fnaf-3" },
-      mario: { title: "Super Mario", url: "https://tikgame.org/embed/super-mario/" },
-      cookieClicker: { title: "Cookie Clicker", url: "https://orteil.dashnet.org/cookieclicker/" },
 
       // Baldi's Basics browser embed (thumbnail file: b.png).
       baldi: { title: "Baldi's Basics", url: "https://www.miniplay.com/embed/baldis-basics-in-education-and-learning" }
@@ -1776,7 +1765,6 @@ function openGame(gameKey) {
       const game = games[gameKey];
 
       gamePlayerTitle.textContent = game.title;
-      document.getElementById('cookie-save-note').classList.toggle('hidden', gameKey !== 'cookieClicker');
       document.getElementById('gameOpenTabBtn').classList.remove('hidden');
       document.getElementById('gameFullscreenBtn').classList.remove('hidden');
 
@@ -1846,8 +1834,6 @@ function openGame(gameKey) {
     document.getElementById("minecraftGameCard").addEventListener("click", () => openGame("minecraft"));
     document.getElementById("grannyGameCard").addEventListener("click", () => openGame("granny"));
     document.getElementById("fnaf1GameCard").addEventListener("click", () => openGame("fnaf1"));
-    document.getElementById("marioGameCard").addEventListener("click", () => openGame("mario"));
-    document.getElementById("cookieClickerGameCard").addEventListener("click", () => openGame("cookieClicker"));
   document.getElementById("fnaf2GameCard").addEventListener("click", () => openGame("fnaf2"));
   document.getElementById("fnaf3GameCard").addEventListener("click", () => openGame("fnaf3"));
     document.getElementById("baldiGameCard").addEventListener("click", () => openGame("baldi"));
