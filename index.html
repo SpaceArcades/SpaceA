@@ -816,6 +816,24 @@
 
     }
 
+    .game-player-top {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .game-player-title {
+      flex: 1 1 140px;
+      min-width: 100px;
+    }
+
+    .game-player-top .game-back-btn,
+    .game-player-top .game-fullscreen-btn {
+      min-height: 38px;
+      cursor: pointer;
+    }
+
     .preview-row {
 
       display: flex;
@@ -1354,6 +1372,7 @@
             </button>
 
             <button class="game-card" type="button" id="sonicCDGameCard">
+              <img class="game-thumbnail" src="son.png" alt="Sonic CD" title="Sonic CD" onerror="this.style.display='none'">
               <div class="game-card-body"><h3>Sonic CD</h3></div>
             </button>
 
@@ -1369,6 +1388,8 @@
 
             <div class="game-player-title" id="gamePlayerTitle">Game Title</div>
 
+            <button class="game-fullscreen-btn" id="gameRefreshBtn" type="button" title="Reload this game">↻ Refresh</button>
+            <button class="game-fullscreen-btn" id="gameVolumeBtn" type="button" title="Toggle SpaceArcades background music. Game audio must be changed inside the game itself.">🔊 Volume</button>
             <button class="game-fullscreen-btn" id="gameOpenTabBtn" type="button">Open in new tab ↗</button>
             <button class="game-fullscreen-btn" id="gameFullscreenBtn" type="button">Fullscreen ⛶</button>
 
@@ -1765,7 +1786,10 @@
     const gamePlayerFrame = document.getElementById("gamePlayerFrame");
 
     const gamePlayerTitle = document.getElementById("gamePlayerTitle");
-function openGame(gameKey) {
+    let currentGameKey = null;
+
+    function openGame(gameKey) {
+      currentGameKey = gameKey;
 
       // Pause background music automatically when a game starts
 
@@ -1778,6 +1802,8 @@ function openGame(gameKey) {
       gamePlayerTitle.textContent = game.title;
       document.getElementById('gameOpenTabBtn').classList.remove('hidden');
       document.getElementById('gameFullscreenBtn').classList.remove('hidden');
+      document.getElementById('gameRefreshBtn').classList.remove('hidden');
+      document.getElementById('gameVolumeBtn').classList.remove('hidden');
 
       gamePlayerFrame.replaceChildren();
 
@@ -1802,6 +1828,7 @@ function openGame(gameKey) {
 
     function closeGame() {
 
+      currentGameKey = null;
       gamePlayerFrame.replaceChildren();
       document.getElementById('cookie-save-note').classList.add('hidden');
       document.getElementById('gameOpenTabBtn').classList.remove('hidden');
@@ -1850,6 +1877,22 @@ function openGame(gameKey) {
     document.getElementById("baldiGameCard").addEventListener("click", () => openGame("baldi"));
     document.getElementById("marioGameCard").addEventListener("click", () => openGame("mario"));
     document.getElementById("sonicCDGameCard").addEventListener("click", () => openGame("sonicCD"));
+
+    document.getElementById("gameRefreshBtn").addEventListener("click", () => {
+      if (currentGameKey && games[currentGameKey]) openGame(currentGameKey);
+    });
+
+    document.getElementById("gameVolumeBtn").addEventListener("click", () => {
+      // Cross-origin game audio cannot be controlled by the parent page.
+      // This button toggles SpaceArcades' own background music; game audio is controlled in-game.
+      if (audio.paused) {
+        audio.play().then(() => { playBtn.textContent = '❚❚'; }).catch(() => {});
+      } else {
+        audio.pause();
+        playBtn.textContent = '▶';
+      }
+      document.getElementById("gameVolumeBtn").textContent = audio.paused ? "🔇 Volume" : "🔊 Volume";
+    });
 
     document.getElementById("gameBackBtn").addEventListener("click", closeGame);
 
