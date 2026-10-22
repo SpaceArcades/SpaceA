@@ -9,9 +9,9 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Space Arcade</title>
+  <title>SpaceArcades</title>
 
-  <link id="favicon" rel="icon" type="image/png" href="https://a.favicon.im/www.magma.se?larger=true">
+  <link id="favicon" rel="icon" type="image/png" href="icon.png">
 
   <style>
 
@@ -156,6 +156,14 @@
 
       backdrop-filter: blur(12px);
 
+    }
+
+    .site-logo {
+      display: block;
+      width: 190px;
+      max-width: 42vw;
+      height: auto;
+      object-fit: contain;
     }
 
     .wordmark {
@@ -325,7 +333,7 @@
       background: var(--text);
 
     }
-        
+
     .vol-container {
 
       display: flex;
@@ -1077,6 +1085,8 @@
 
     <header>
 
+      <a class="brand-link" href="index.html" aria-label="SpaceArcades home"><img class="site-logo" src="icon.png" alt="SpaceArcades logo"></a>
+
       <div class="header-controls">
 
 
@@ -1240,7 +1250,7 @@
 
                 <strong id="previewName">Magma</strong>
 
-                <span id="previewSub">Space Arcade · Browser tab</span>
+                <span id="previewSub">SpaceArcades · Browser tab</span>
 
               </div>
 
@@ -1268,7 +1278,7 @@
 
             </div>
 
-            <span class="count">9 games</span>
+            <span class="count">8 games</span>
 
           </div>
 
@@ -1305,12 +1315,7 @@
               </div>
             </button>
 
-            <button class="game-card coming-soon-card" type="button" id="amongUsGameCard" aria-disabled="true">
-              <img class="game-thumbnail" src="Am.png" alt="Among Us" onerror="this.style.display='none'">
-              <div class="game-card-body">
-                <h3>Among Us</h3>
-              </div>
-            </button>
+
 
             <button class="game-card" type="button" id="grannyGameCard">
               <img class="game-thumbnail" src="granny.png" alt="Granny" onerror="this.style.display='none'">
@@ -1333,9 +1338,7 @@
   <div class="game-card-body"><h3>FNAF 2</h3></div>
 </button>
 <button class="game-card" type="button" id="baldiGameCard">
-              <div class="game-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:2.6rem;background:#111;color:#fff;">
-                📚
-              </div>
+              <img class="game-thumbnail" src="b.png" alt="Baldi's Basics" onerror="this.style.display='none'">
               <div class="game-card-body">
                 <h3>Baldi's Basics</h3>
               </div>
@@ -1640,13 +1643,13 @@
       minecraft: { title: "Minecraft", url: "https://mineplay.io/play/26.3" },
       granny: { title: "Granny", url: "https://grannyonline.io/" },
 
-      // Fan-made browser recreations hosted by Construct Arcade.
-      fnaf1: { title: "FNAF 1", url: "https://fngames.io/fnaf" },
-      fnaf2: { title: "FNAF 2", url: "https://fngames.io/five-nights-at-freddys-2" },
-      fnaf3: { title: "FNAF 3", url: "https://fngames.io/five-nights-at-freddys-3" },
+      // Alternative browser-playable HTML5 ports. Some providers may restrict iframe embedding.
+      fnaf1: { title: "FNAF 1", url: "https://genizy.github.io/fnaf/1/" },
+      fnaf2: { title: "FNAF 2", url: "https://ruihq.github.io/FNAF2/" },
+      fnaf3: { title: "FNAF 3", url: "https://genizy.github.io/fnaf/3/" },
 
-      // Baldi's Basics browser page requested by the user.
-      baldi: { title: "Baldi's Basics", url: "https://baldis-basics-online.github.io/" }
+      // Baldi's Basics browser embed (thumbnail file: b.png).
+      baldi: { title: "Baldi's Basics", url: "https://www.miniplay.com/embed/baldis-basics-in-education-and-learning" }
     };
 
     let selectedId = "magma";
@@ -1770,7 +1773,9 @@ function openGame(gameKey) {
 
       frame.title = game.title;
 
-      frame.allow = "fullscreen; autoplay; gamepad; pointer-lock";
+      frame.allow = "fullscreen; autoplay; gamepad; pointer-lock; clipboard-read; clipboard-write";
+      frame.allowFullscreen = true;
+      frame.loading = "eager";
       frame.referrerPolicy = "strict-origin-when-cross-origin";
 
       gamePlayerFrame.appendChild(frame);
@@ -1823,7 +1828,6 @@ function openGame(gameKey) {
     }
 
     document.getElementById("minecraftGameCard").addEventListener("click", openComingSoon);
-    document.getElementById("amongUsGameCard").addEventListener("click", openComingSoon);
     document.getElementById("grannyGameCard").addEventListener("click", () => openGame("granny"));
     document.getElementById("fnaf1GameCard").addEventListener("click", () => openGame("fnaf1"));
   document.getElementById("fnaf2GameCard").addEventListener("click", () => openGame("fnaf2"));
@@ -1868,4 +1872,4 @@ function openGame(gameKey) {
 
 
 
-<!-- Detta är en kommentar som inte syns på sidan -->
+
