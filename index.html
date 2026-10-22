@@ -1389,7 +1389,7 @@
             <div class="game-player-title" id="gamePlayerTitle">Game Title</div>
 
             <button class="game-fullscreen-btn" id="gameRefreshBtn" type="button" title="Reload this game">↻ Refresh</button>
-            <button class="game-fullscreen-btn" id="gameVolumeBtn" type="button" title="Toggle SpaceArcades background music. Game audio must be changed inside the game itself.">🔊 Volume</button>
+            <button class="game-fullscreen-btn" id="gameVolumeBtn" type="button" title="Toggle sound in the currently open game, when the game allows it.">🔊 Volume</button>
             <button class="game-fullscreen-btn" id="gameOpenTabBtn" type="button">Open in new tab ↗</button>
             <button class="game-fullscreen-btn" id="gameFullscreenBtn" type="button">Fullscreen ⛶</button>
 
@@ -1887,41 +1887,50 @@
 
     const gameVolumeBtn = document.getElementById("gameVolumeBtn");
 
+    // Control audio elements in the currently open game when browser security
+    // permits access (for example, same-origin games). Cross-origin game sites
+    // intentionally cannot be controlled by the parent page.
+    let gameSoundMuted = false;
+
     function updateGameVolumeButton() {
-      // This controls SpaceArcades' own music. Browsers prevent the parent
-      // page from changing audio inside most third-party, cross-origin games.
-      const isAudible = !audio.paused && !audio.muted && audio.volume > 0;
-      gameVolumeBtn.textContent = isAudible ? "🔊 Music On" : "🔇 Music Off";
-      gameVolumeBtn.setAttribute("aria-pressed", String(isAudible));
-      gameVolumeBtn.title = "Toggle SpaceArcades background music. For game sound, use the game's own settings.";
+      gameVolumeBtn.textContent = gameSoundMuted ? "🔇 Game Sound" : "🔊 Game Sound";
+      gameVolumeBtn.setAttribute("aria-pressed", String(gameSoundMuted));
+      gameVolumeBtn.title = "Toggle sound in the currently open game. Some hosted games must be muted using their own controls.";
     }
 
-    gameVolumeBtn.addEventListener("click", async () => {
-      const isAudible = !audio.paused && !audio.muted && audio.volume > 0;
-      if (isAudible) {
-        userWantsMusic = false;
-        audio.pause();
-        playBtn.textContent = "▶";
-      } else {
-        // Restore a usable volume if the music was muted or turned to zero.
-        if (audio.volume === 0) audio.volume = 0.8;
-        audio.muted = false;
-        volumeBar.value = Math.round(audio.volume * 100);
-        userWantsMusic = true;
-        try {
-          await audio.play();
-          playBtn.textContent = "❚❚";
-        } catch (error) {
-          // Keep the UI accurate if the browser or audio file blocks playback.
-          playBtn.textContent = "▶";
+    gameVolumeBtn.addEventListener("click", () => {
+      const frame = gamePlayerFrame.querySelector("iframe");
+      if (!frame) return;
+
+      try {
+        const gameDocument = frame.contentDocument || frame.contentWindow.document;
+        const media = Array.from(gameDocument.querySelectorAll("audio, video"));
+        if (media.length === 0) {
+          showGameSoundNotice("This game does not expose audio controls. Use the game's own sound settings or keyboard controls.");
+          return;
         }
+
+        gameSoundMuted = !media.every(item => item.muted);
+        media.forEach(item => { item.muted = gameSoundMuted; });
+        updateGameVolumeButton();
+      } catch (error) {
+        showGameSoundNotice("This game's website blocks external sound control. Use the game's own volume settings.");
       }
-      updateGameVolumeButton();
     });
 
-    audio.addEventListener("play", updateGameVolumeButton);
-    audio.addEventListener("pause", updateGameVolumeButton);
-    audio.addEventListener("volumechange", updateGameVolumeButton);
+    function showGameSoundNotice(message) {
+      let notice = document.getElementById("gameSoundNotice");
+      if (!notice) {
+        notice = document.createElement("div");
+        notice.id = "gameSoundNotice";
+        notice.setAttribute("role", "status");
+        notice.style.cssText = "padding:10px 14px;margin:8px 0;border-radius:8px;background:rgba(30,30,30,.9);color:white;font-size:14px;";
+        gamePlayerFrame.insertBefore(notice, gamePlayerFrame.firstChild);
+      }
+      notice.textContent = message;
+      notice.classList.remove("hidden");
+    }
+
     updateGameVolumeButton();
 
     document.getElementById("gameBackBtn").addEventListener("click", closeGame);
