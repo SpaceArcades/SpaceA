@@ -1066,6 +1066,8 @@
 
     }
 
+    /* Translator + sponsor embeds */
+    .translator-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.translator-panel{border:1px solid var(--panel-border);background:var(--panel);border-radius:var(--radius-lg);padding:20px;backdrop-filter:blur(10px)}.translator-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.translator-controls select,.translator-panel textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--panel-border);border-radius:8px;padding:10px 12px;color:var(--text);font:inherit}.translator-panel textarea{min-height:210px;resize:vertical}.translator-actions,.sponsor-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.translator-output{min-height:210px;white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(0,0,0,.2);border:1px solid var(--panel-border);border-radius:8px;padding:12px}.translator-status{color:var(--muted);font-size:.8rem;margin-top:8px;min-height:1.2em}.sponsor-frame{width:100%;height:680px;border:0;border-radius:var(--radius-lg);background:#000}
     @media (max-width: 768px) {
 
       .app-grid, .edit-layout, .aesthetic-banner {
@@ -1145,6 +1147,10 @@
             <button class="tab active" id="editTab" type="button" aria-selected="true">Shortcuts</button>
 
             <button class="tab" id="gamesTab" type="button" aria-selected="false">Arcade</button>
+
+            <button class="tab" id="translatorTab" type="button" aria-selected="false">Translator</button>
+
+            <button class="tab" id="hangoutTab" type="button" aria-selected="false">Hangout</button>
 
           </nav>
 
@@ -1279,6 +1285,21 @@
         </div>
 
       </section>
+
+      <!-- TRANSLATOR SECTION -->
+      <section id="translatorSection" class="hidden">
+        <div class="section-heading"><div><h2>Universal Translator</h2><p class="sub">Translate text between a wide range of languages from one place.</p></div></div>
+        <div class="translator-layout">
+          <section class="translator-panel"><h3>Translate</h3>
+            <div class="translator-controls"><select id="sourceLanguage" aria-label="Source language"><option value="auto">Detect language</option><option value="en">English</option><option value="sv">Swedish</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="nl">Dutch</option><option value="da">Danish</option><option value="no">Norwegian</option><option value="fi">Finnish</option><option value="pl">Polish</option><option value="cs">Czech</option><option value="uk">Ukrainian</option><option value="ru">Russian</option><option value="ar">Arabic</option><option value="tr">Turkish</option><option value="el">Greek</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="ur">Urdu</option><option value="fa">Persian</option><option value="zh-CN">Chinese (Simplified)</option><option value="zh-TW">Chinese (Traditional)</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="vi">Vietnamese</option><option value="th">Thai</option><option value="id">Indonesian</option><option value="ms">Malay</option><option value="tl">Filipino</option><option value="ro">Romanian</option><option value="hu">Hungarian</option><option value="bg">Bulgarian</option><option value="sr">Serbian</option><option value="hr">Croatian</option><option value="sl">Slovenian</option><option value="et">Estonian</option><option value="lv">Latvian</option><option value="lt">Lithuanian</option></select>
+              <select id="targetLanguage" aria-label="Target language"><option value="en">English</option><option value="sv">Swedish</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="nl">Dutch</option><option value="da">Danish</option><option value="no">Norwegian</option><option value="fi">Finnish</option><option value="pl">Polish</option><option value="cs">Czech</option><option value="uk">Ukrainian</option><option value="ru">Russian</option><option value="ar">Arabic</option><option value="tr">Turkish</option><option value="el">Greek</option><option value="hi">Hindi</option><option value="bn">Bengali</option><option value="ur">Urdu</option><option value="fa">Persian</option><option value="zh-CN">Chinese (Simplified)</option><option value="zh-TW">Chinese (Traditional)</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="vi">Vietnamese</option><option value="th">Thai</option><option value="id">Indonesian</option><option value="ms">Malay</option><option value="tl">Filipino</option><option value="ro">Romanian</option><option value="hu">Hungarian</option><option value="bg">Bulgarian</option><option value="sr">Serbian</option><option value="hr">Croatian</option><option value="sl">Slovenian</option><option value="et">Estonian</option><option value="lv">Latvian</option><option value="lt">Lithuanian</option></select></div>
+            <textarea id="translateInput" placeholder="Type or paste text here..."></textarea><div class="translator-actions"><button class="primary-btn" id="translateBtn" type="button">Translate</button><button class="primary-btn" id="swapLanguagesBtn" type="button">Swap</button><button class="primary-btn" id="copyTranslationBtn" type="button">Copy</button></div><div class="translator-status" id="translatorStatus" role="status" aria-live="polite"></div>
+          </section>
+          <section class="translator-panel"><h3>Translation</h3><p class="sub">Powered by a public translation service.</p><div class="translator-output" id="translateOutput">Your translation will appear here.</div></section>
+        </div>
+      </section>
+      <!-- SPONSOR / HANGOUT SECTION -->
+      <section id="hangoutSection" class="hidden"><div class="section-heading"><div><h2>Hangout</h2><p class="sub">Sponsored by Team Tomato Hangout.</p></div></div><section class="panel"><div class="sponsor-actions"><button class="primary-btn" id="hangoutOpenBtn" type="button">Open Hangout in new tab ↗</button><button class="primary-btn" id="hangoutRefreshBtn" type="button">↻ Refresh</button></div><iframe class="sponsor-frame" id="hangoutFrame" src="https://teamtomatohangout.vercel.app/" title="Team Tomato Hangout" allow="fullscreen; clipboard-read; clipboard-write" loading="eager"></iframe></section></section>
 
       <!-- GAMES SECTION -->
 
@@ -1760,10 +1781,13 @@
     /* NAVIGATION TABS */
 
     function showSection(section) {
-      const isEdit = section === "edit";
-      document.getElementById("editSection").classList.toggle("hidden", !isEdit);
-      document.getElementById("gamesSection").classList.toggle("hidden", isEdit);
-      document.getElementById("editTab").classList.toggle("active", isEdit);
+      const isEdit=section === "edit", isGames=section === "games", isTranslator=section === "translator", isHangout=section === "hangout";
+      document.getElementById("editSection").classList.toggle("hidden",!isEdit); document.getElementById("gamesSection").classList.toggle("hidden",!isGames); document.getElementById("translatorSection").classList.toggle("hidden",!isTranslator); document.getElementById("hangoutSection").classList.toggle("hidden",!isHangout);
+      [["editTab",isEdit],["gamesTab",isGames],["translatorTab",isTranslator],["hangoutTab",isHangout]].forEach(([id,a])=>{const e=document.getElementById(id);e.classList.toggle("active",a);e.setAttribute("aria-selected",String(a));});
+      if(isGames&&!currentGameKey){gamePlayerView.classList.add("hidden");gameCatalogView.classList.remove("hidden");}
+    }
+
+    document.getElementById("editTab").classList.toggle("active", isEdit);
       document.getElementById("gamesTab").classList.toggle("active", !isEdit);
       // If Games is selected, return to the catalogue rather than a stale player view.
       if (!isEdit && !currentGameKey) {
@@ -1775,6 +1799,17 @@
     document.getElementById("editTab").addEventListener("click", () => showSection("edit"));
 
     document.getElementById("gamesTab").addEventListener("click", () => showSection("games"));
+    document.getElementById("translatorTab").addEventListener("click", () => showSection("translator"));
+    document.getElementById("hangoutTab").addEventListener("click", () => showSection("hangout"));
+
+    /* UNIVERSAL TRANSLATOR */
+    const translateInput=document.getElementById("translateInput"),translateOutput=document.getElementById("translateOutput"),sourceLanguage=document.getElementById("sourceLanguage"),targetLanguage=document.getElementById("targetLanguage"),translatorStatus=document.getElementById("translatorStatus");
+    async function translateText(){const text=translateInput.value.trim();if(!text){translatorStatus.textContent="Enter some text to translate.";return;}translatorStatus.textContent="Translating…";try{const source=sourceLanguage.value==="auto"?"autodetect":sourceLanguage.value;const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(source+"|"+targetLanguage.value)}`;const r=await fetch(url);if(!r.ok)throw new Error();const d=await r.json(),result=d?.responseData?.translatedText;if(!result)throw new Error();translateOutput.textContent=result;translatorStatus.textContent="Translation complete.";}catch{translateOutput.textContent="Translation could not be completed right now. Try again later.";translatorStatus.textContent="Translation service unavailable.";}}
+    document.getElementById("translateBtn").addEventListener("click",translateText);
+    document.getElementById("copyTranslationBtn").addEventListener("click",async()=>{const v=translateOutput.textContent;if(!v||v==="Your translation will appear here.")return;try{await navigator.clipboard.writeText(v);translatorStatus.textContent="Translation copied.";}catch{translatorStatus.textContent="Copy is unavailable in this browser.";}});
+    document.getElementById("swapLanguagesBtn").addEventListener("click",()=>{if(sourceLanguage.value==="auto"){translatorStatus.textContent="Choose a source language before swapping.";return;}const old=sourceLanguage.value;sourceLanguage.value=targetLanguage.value;targetLanguage.value=old;});
+    /* SPONSOR / HANGOUT CONTROLS */
+    const hangoutUrl="https://teamtomatohangout.vercel.app/"; document.getElementById("hangoutOpenBtn").addEventListener("click",()=>window.open(hangoutUrl,"_blank","noopener,noreferrer")); document.getElementById("hangoutRefreshBtn").addEventListener("click",()=>{document.getElementById("hangoutFrame").src=hangoutUrl;});
 
     /* EMBEDDED GAME PLAYER */
 
