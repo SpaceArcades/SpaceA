@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -1429,7 +1430,7 @@
 
             <button class="game-card" type="button" id="deltaruneGameCard">
               <img class="game-thumbnail" src="delt.png" alt="DELTARUNE Battle Simulator" onerror="this.style.display=\'none\'">
-              <div class="game-card-body"><h3>DELTARUNE Battle Simulator</h3></div>
+              <div class="game-card-body"><h3>DELTARUNE</h3></div>
             </button>
 
           </div>
@@ -1457,21 +1458,43 @@
 
       </section>
 
-      <!-- TRANSLATOR SECTION -->
+      <!-- BUILT-IN TRANSLATOR -->
       <section id="translatorSection" class="hidden">
         <div class="section-heading">
           <div>
             <h2>Translator</h2>
-            <p class="sub">Translate text between languages using Google Translate.</p>
+            <p class="sub">Translate text right inside SpaceArcades — no external translator page or iframe.</p>
           </div>
         </div>
-        <div class="webapp-panel">
-          <div class="webapp-toolbar">
-            <p>Translate between a wide range of languages. If the embedded page is blocked, open it in a new tab.</p>
-            <a class="primary-btn" href="https://www.deepl.com/translato" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;min-height:40px;text-decoration:none;">Open Translator ↗</a>
+        <div class="webapp-panel" style="padding:20px;">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px;">
+            <label style="display:grid;gap:6px;flex:1;min-width:180px;">From
+              <select id="translatorSource" style="padding:12px;border-radius:9px;border:1px solid var(--panel-border);background:var(--panel);color:var(--text);">
+                <option value="en">English</option><option value="sv">Swedish</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="ru">Russian</option><option value="uk">Ukrainian</option><option value="tr">Turkish</option><option value="ar">Arabic</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese (Simplified)</option><option value="fi">Finnish</option><option value="da">Danish</option><option value="no">Norwegian</option><option value="el">Greek</option><option value="he">Hebrew</option><option value="id">Indonesian</option><option value="th">Thai</option><option value="vi">Vietnamese</option><option value="cs">Czech</option><option value="ro">Romanian</option><option value="hu">Hungarian</option>
+              </select>
+            </label>
+            <button id="translatorSwap" type="button" title="Swap languages" style="padding:11px 15px;border:1px solid var(--panel-border);border-radius:9px;background:var(--panel-hover);color:var(--text);cursor:pointer;">⇄ Swap</button>
+            <label style="display:grid;gap:6px;flex:1;min-width:180px;">To
+              <select id="translatorTarget" style="padding:12px;border-radius:9px;border:1px solid var(--panel-border);background:var(--panel);color:var(--text);">
+                <option value="sv">Swedish</option><option value="en">English</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="ru">Russian</option><option value="uk">Ukrainian</option><option value="tr">Turkish</option><option value="ar">Arabic</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese (Simplified)</option><option value="fi">Finnish</option><option value="da">Danish</option><option value="no">Norwegian</option><option value="el">Greek</option><option value="he">Hebrew</option><option value="id">Indonesian</option><option value="th">Thai</option><option value="vi">Vietnamese</option><option value="cs">Czech</option><option value="ro">Romanian</option><option value="hu">Hungarian</option>
+              </select>
+            </label>
           </div>
-          <iframe class="webapp-frame" src="https://www.deepl.com/translato" title="Google Translate" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-read; clipboard-write"></iframe>
-          <p class="webapp-fallback">Some websites prevent embedding. Use “Open Translator” if the frame does not load.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px;">
+            <label style="display:grid;gap:7px;">Text to translate
+              <textarea id="translatorInput" rows="8" placeholder="Type or paste text here..." style="width:100%;box-sizing:border-box;padding:14px;border-radius:10px;border:1px solid var(--panel-border);background:var(--panel);color:var(--text);font:inherit;resize:vertical;"></textarea>
+            </label>
+            <label style="display:grid;gap:7px;">Translation
+              <textarea id="translatorOutput" rows="8" placeholder="Your translation will appear here..." readonly style="width:100%;box-sizing:border-box;padding:14px;border-radius:10px;border:1px solid var(--panel-border);background:var(--panel);color:var(--text);font:inherit;resize:vertical;"></textarea>
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+            <button id="translatorGo" class="primary-btn" type="button">Translate</button>
+            <button id="translatorCopy" class="game-fullscreen-btn" type="button">Copy translation</button>
+            <button id="translatorClear" class="game-fullscreen-btn" type="button">Clear</button>
+            <span id="translatorStatus" role="status" aria-live="polite" style="color:var(--muted);font-size:.9rem;"></span>
+          </div>
+          <p class="webapp-fallback" style="margin-top:12px;">Powered by the MyMemory translation API. Free usage is limited; very long text may need to be split into smaller requests.</p>
         </div>
       </section>
 
@@ -2071,12 +2094,95 @@
 
     });
 
-    selectApp("magma");
+
+
+    /* BUILT-IN TRANSLATOR */
+    const translatorInput = document.getElementById("translatorInput");
+    const translatorOutput = document.getElementById("translatorOutput");
+    const translatorStatus = document.getElementById("translatorStatus");
+    const translatorGo = document.getElementById("translatorGo");
+
+    translatorGo.addEventListener("click", async () => {
+      const text = translatorInput.value.trim();
+      const source = document.getElementById("translatorSource").value;
+      const target = document.getElementById("translatorTarget").value;
+
+      if (!text) {
+        translatorStatus.textContent = "Enter some text first.";
+        return;
+      }
+      if (source === target) {
+        translatorOutput.value = text;
+        translatorStatus.textContent = "Both languages are the same.";
+        return;
+      }
+      if (new TextEncoder().encode(text).length > 450) {
+        translatorStatus.textContent = "Please keep each request under about 450 characters.";
+        return;
+      }
+
+      translatorGo.disabled = true;
+      translatorGo.textContent = "Translating...";
+      translatorStatus.textContent = "Connecting to translation service...";
+      try {
+        const params = new URLSearchParams({
+          q: text,
+          langpair: source + "|" + target
+        });
+        const response = await fetch("https://api.mymemory.translated.net/get?" + params.toString());
+        if (!response.ok) throw new Error("Translation service returned HTTP " + response.status);
+        const data = await response.json();
+        if (Number(data.responseStatus) !== 200 || !data.responseData?.translatedText) {
+          throw new Error(data.responseDetails || "No translation was returned.");
+        }
+        translatorOutput.value = data.responseData.translatedText;
+        translatorStatus.textContent = "Translation complete.";
+      } catch (error) {
+        translatorStatus.textContent = "Could not translate: " + error.message;
+      } finally {
+        translatorGo.disabled = false;
+        translatorGo.textContent = "Translate";
+      }
+    });
+
+    document.getElementById("translatorSwap").addEventListener("click", () => {
+      const source = document.getElementById("translatorSource");
+      const target = document.getElementById("translatorTarget");
+      const oldSource = source.value;
+      source.value = target.value;
+      target.value = oldSource;
+      const oldInput = translatorInput.value;
+      translatorInput.value = translatorOutput.value;
+      translatorOutput.value = oldInput;
+    });
+
+    document.getElementById("translatorCopy").addEventListener("click", async () => {
+      if (!translatorOutput.value) {
+        translatorStatus.textContent = "There is no translation to copy.";
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(translatorOutput.value);
+        translatorStatus.textContent = "Translation copied.";
+      } catch {
+        translatorOutput.select();
+        translatorStatus.textContent = "Select the translation and copy it manually.";
+      }
+    });
+
+    document.getElementById("translatorClear").addEventListener("click", () => {
+      translatorInput.value = "";
+      translatorOutput.value = "";
+      translatorStatus.textContent = "";
+    });
+
+        selectApp("magma");
 
   </script>
 
 </body>
 
 </html>
+
 
 
