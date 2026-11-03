@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -1348,7 +1347,7 @@
 
             </div>
 
-            <span class="count">10 games</span>
+            <span class="count">11 games</span>
 
           </div>
 
@@ -1426,6 +1425,11 @@
             <button class="game-card" type="button" id="sonicCDGameCard">
               <img class="game-thumbnail" src="son.png" alt="Sonic CD" title="Sonic CD" onerror="this.style.display='none'">
               <div class="game-card-body"><h3>Sonic CD</h3></div>
+            </button>
+
+            <button class="game-card" type="button" id="deltaruneGameCard">
+              <img class="game-thumbnail" src="delt.png" alt="DELTARUNE Battle Simulator" onerror="this.style.display=\'none\'">
+              <div class="game-card-body"><h3>DELTARUNE Battle Simulator</h3></div>
             </button>
 
           </div>
@@ -1772,7 +1776,8 @@
       // Baldi's Basics browser embed (thumbnail file: b.png).
       baldi: { title: "Baldi's Basics", url: "https://www.miniplay.com/embed/baldis-basics-in-education-and-learning" },
       mario: { title: "Super Mario", url: "https://www.miniplay.com/embed/super-mario-html5" },
-      sonicCD: { title: "Sonic CD", url: "https://www.retrogames.cc/embed/45295-sonic-cd-edition.html" }
+      sonicCD: { title: "Sonic CD", url: "https://www.retrogames.cc/embed/45295-sonic-cd-edition.html" },
+      deltarune: { title: "DELTARUNE Battle Simulator", url: "https://scratch.mit.edu/projects/613803664/embed" }
     };
 
     let selectedId = "magma";
@@ -1906,20 +1911,25 @@
       gamePlayerFrame.replaceChildren();
 
       const frame = document.createElement("iframe");
-
       frame.src = game.url;
-
       frame.title = game.title;
-
-      frame.allow = "fullscreen; autoplay; gamepad; pointer-lock; clipboard-read; clipboard-write";
+      frame.width = "485";
+      frame.height = "402";
+      frame.allowTransparency = true;
+      frame.setAttribute("frameborder", "0");
+      frame.setAttribute("scrolling", "no");
+      frame.allow = "fullscreen; autoplay";
       frame.allowFullscreen = true;
       frame.loading = "eager";
-      frame.referrerPolicy = "strict-origin-when-cross-origin";
 
       gamePlayerFrame.appendChild(frame);
 
-      gameCatalogView.classList.add("hidden");
+      document.getElementById('gameOpenTabBtn').classList.remove('hidden');
+      document.getElementById('gameFullscreenBtn').classList.remove('hidden');
+      document.getElementById('gameRefreshBtn').classList.remove('hidden');
+      document.getElementById('gameVolumeBtn').classList.remove('hidden');
 
+      gameCatalogView.classList.add("hidden");
       gamePlayerView.classList.remove("hidden");
 
     }
@@ -1979,6 +1989,7 @@
     document.getElementById("baldiGameCard").addEventListener("click", () => openGame("baldi"));
     document.getElementById("marioGameCard").addEventListener("click", () => openGame("mario"));
     document.getElementById("sonicCDGameCard").addEventListener("click", () => openGame("sonicCD"));
+    document.getElementById("deltaruneGameCard").addEventListener("click", () => openGame("deltarune"));
 
     document.getElementById("gameRefreshBtn").addEventListener("click", () => {
       if (currentGameKey && games[currentGameKey]) openGame(currentGameKey);
@@ -2067,6 +2078,5 @@
 </body>
 
 </html>
-
 
 
