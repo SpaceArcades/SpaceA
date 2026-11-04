@@ -1,0 +1,76 @@
+{
+  "site": "SpaceArcades",
+  "games": [
+    {
+      "id": "pokemonTcg",
+      "title": "Pokémon TCG (TCG One)",
+      "url": "https://tcg.one/play"
+    },
+    {
+      "id": "kapi",
+      "title": "Friday Night Funkin' vs Kapi",
+      "url": "https://fridaynightfunkin2.io/friday-night-funkin-vs-kapi-v2"
+    },
+    {
+      "id": "onePiecePacks",
+      "title": "One Piece Pack Simulator",
+      "url": "https://onepiecepacksimulator.com/"
+    }
+  ],
+  "accessTabs": {
+    "admin": {
+      "label": "✦ Admin",
+      "code": "070814",
+      "permissions": [
+        "add-games"
+      ],
+      "glow": "purple",
+      "canRelinquishAccess": true
+    },
+    "owner": {
+      "label": "✦ Owner",
+      "code": "0708",
+      "permissions": [
+        "add-games",
+        "remove-games",
+        "restore-games"
+      ],
+      "glow": "gold",
+      "canRelinquishAccess": true
+    },
+    "accessStorageBehavior": "Persist unlocked role across reloads until user removes access"
+  },
+  "keycodeButton": {
+    "label": "KEYCODE",
+    "placement": "spacearcades-page",
+    "modal": {
+      "style": "black",
+      "outline": "white",
+      "animation": "drop-down-and-slide-up",
+      "blurBackground": true,
+      "showHeading": false,
+      "showInstructions": false
+    },
+    "successColor": "green",
+    "errorColor": "red"
+  },
+  "storage": {
+    "accessMode": "spaceArcadesAccessModeV1",
+    "customGames": "spaceArcadesCustomGamesV1",
+    "deletedGames": "spaceArcadesDeletedGamesV1",
+    "removedCustomGames": "spaceArcadesRemovedCustomGamesV1"
+  },
+  "preserveExistingGamesAndThumbnails": true,
+  "thumbnailPolicy": {
+    "autoFetch": false,
+    "useWebsiteFavicons": false,
+    "userCreatesThumbnails": true
+  },
+  "navigation": {
+    "defaultTab": "quickLaunch",
+    "quickLaunchLabel": "Quick Launch",
+    "persistShortcutNames": true,
+    "shortcutNamesStorageKey": "spaceArcadesShortcutNamesV1"
+  },
+  "securityNote": "Access codes are client-side and can be found by inspecting page source or browser developer tools; do not use for sensitive security."
+}
