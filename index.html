@@ -2273,6 +2273,46 @@
 
   </script>
 
+  <!-- ADMIN BUTTON -->
+<style>
+  #adminButton {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 24px;
+    background: #111;
+    color: white;
+    border: 1px solid white;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 99999;
+    box-shadow: 0 0 12px rgba(255,255,255,0.25);
+  }
+
+  #adminButton:hover {
+    background: #333;
+  }
+</style>
+
+<button id="adminButton" type="button">Admin</button>
+
+<script>
+  document.getElementById("adminButton").addEventListener("click", function () {
+    const password = prompt("Enter Admin Password:");
+
+    if (password === null) return;
+
+    if (password === "070814") {
+      alert("Admin access granted!");
+    } else {
+      alert("Incorrect password!");
+    }
+  });
+</script>
+
 </body>
 
 </html>
