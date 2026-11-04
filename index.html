@@ -1176,11 +1176,79 @@
       cursor: pointer; font-size: 21px;
     }
     .translator-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+    .thumbnail-drop-zone { margin-top:8px; padding:22px 16px; border:2px dashed var(--panel-border); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; text-align:center; color:var(--muted); cursor:pointer; transition:border-color .2s, background .2s; }
+    .thumbnail-drop-zone strong { color:var(--text); }
+    .thumbnail-drop-zone.drag-over { border-color:var(--accent); background:var(--panel-hover); box-shadow:var(--neon-glow); }
+    .thumbnail-drop-zone input { max-width:100%; margin-top:8px; }
+    .thumbnail-drop-zone.disabled { opacity:.45; cursor:not-allowed; }
     #translatorStatus { color: var(--muted); font-size: .9rem; }
     @media (max-width: 650px) {
       .translator-editors { grid-template-columns: 1fr; }
       .translator-field textarea { min-height: 160px; }
       .translator-panel { padding: 14px; }
+    }
+
+
+    .special-tab {
+      color: #c4a1ff !important;
+      text-shadow: 0 0 8px rgba(164,105,255,.8);
+      border: 1px solid rgba(164,105,255,.55);
+      box-shadow: 0 0 12px rgba(164,105,255,.22);
+    }
+    #adminTab.special-tab { color: #c4a1ff !important; }
+    #adminTab.special-tab:hover, #adminTab.special-tab.active {
+      color: #eadcff !important; border-color: #b78aff;
+      box-shadow: 0 0 14px rgba(164,105,255,.65), 0 0 28px rgba(164,105,255,.3);
+    }
+    #ownerTab.special-tab { color: #ffd76a !important; border-color: rgba(255,190,55,.65);
+      text-shadow: 0 0 8px rgba(255,190,55,.85); box-shadow: 0 0 12px rgba(255,190,55,.25); }
+    #ownerTab.special-tab:hover, #ownerTab.special-tab.active { color:#fff0b0 !important;
+      border-color:#ffd76a; box-shadow:0 0 14px rgba(255,190,55,.7),0 0 28px rgba(255,190,55,.32); }
+    #adminButton { position:fixed; right:18px; bottom:18px; z-index:1000; padding:10px 18px;
+      border:1px solid rgba(255,255,255,.8); border-radius:999px; background:#050505; color:#fff;
+      font-weight:800; letter-spacing:.08em; cursor:pointer; box-shadow:0 0 18px rgba(255,255,255,.16);
+      transition:transform .2s, box-shadow .2s; }
+    #adminButton:hover { transform:translateY(-3px); box-shadow:0 0 22px rgba(255,255,255,.38); }
+    #keycodeOverlay { position:fixed; inset:0; z-index:3000; display:flex; justify-content:center; align-items:flex-start;
+      padding:8vh 18px 18px; background:rgba(0,0,0,.28); backdrop-filter:blur(13px); -webkit-backdrop-filter:blur(13px);
+      opacity:0; visibility:hidden; pointer-events:none; transition:opacity .28s, visibility .28s; }
+    #keycodeOverlay.open { opacity:1; visibility:visible; pointer-events:auto; }
+    #keycodeBox { width:min(360px,92vw); min-height:116px; padding:25px 22px 20px; background:#030303;
+      border:1.5px solid #fff; border-radius:14px; box-shadow:0 18px 55px rgba(0,0,0,.8),0 0 20px rgba(255,255,255,.12);
+      transform:translateY(-150%); transition:transform .62s cubic-bezier(.2,.85,.25,1.18); }
+    #keycodeOverlay.open #keycodeBox { transform:translateY(0); }
+    #keycodeInput { display:block; width:100%; padding:13px 14px; color:#fff; background:#050505;
+      border:1px solid rgba(255,255,255,.8); border-radius:8px; text-align:center; letter-spacing:.32em; font-size:1.1rem; }
+    #keycodeInput:focus { outline:none; border-color:#fff; box-shadow:0 0 14px rgba(255,255,255,.22); }
+    #keycodeStatus { min-height:20px; margin-top:12px; text-align:center; font-size:.82rem; font-weight:800; letter-spacing:.04em; }
+    #keycodeStatus.error { color:#ff4545; text-shadow:0 0 10px rgba(255,40,40,.6); }
+    #keycodeStatus.success { color:#35ef83; text-shadow:0 0 10px rgba(40,255,130,.6); }
+    @media (max-width:600px) { #adminButton { right:12px; bottom:12px; } }
+    #newGameTitle, #newGameUrl {
+      display: block;
+      width: 100%;
+      max-width: 620px;
+      padding: 11px 12px;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      color: var(--text);
+      background: rgba(0,0,0,.25);
+    }
+    .managed-game-row {
+      display:flex; align-items:center; gap:12px; padding:10px;
+      border:1px solid var(--panel-border); border-radius:10px;
+      background:var(--panel); min-width:0;
+    }
+    .managed-game-row img { width:56px; height:42px; object-fit:cover; border-radius:6px; }
+    .managed-game-row .managed-game-name { flex:1; min-width:0; overflow-wrap:anywhere; font-weight:700; }
+    .delete-game-btn {
+      padding:7px 10px; border:1px solid rgba(239,68,68,.5);
+      border-radius:8px; color:#fca5a5; cursor:pointer; white-space:nowrap;
+    }
+    .delete-game-btn:hover { background:rgba(239,68,68,.12); }
+    @media (max-width: 600px) {
+      #adminButton { right: 12px; bottom: 12px; }
+      .managed-game-row { flex-wrap:wrap; }
     }
 
 </style>
@@ -1235,11 +1303,14 @@
         <div class="aesthetic-banner">
           <nav class="tabs" aria-label="Main sections">
 
-            <button class="tab active" id="editTab" type="button" aria-selected="true">Shortcuts</button>
+            <button class="tab active" id="editTab" type="button" aria-selected="true">Quick Launch</button>
 
             <button class="tab" id="gamesTab" type="button" aria-selected="false">Arcade</button>
             <button class="tab" id="translatorTab" type="button" aria-selected="false">Translator</button>
+            <button class="tab" id="calculatorTab" type="button" aria-selected="false">Calculator</button>
             <button class="tab" id="hangoutTab" type="button" aria-selected="false">Hangout <span class="sponsor-tag">SPONSOR</span></button>
+            <button class="tab special-tab hidden" id="adminTab" type="button" aria-selected="false">✦ Admin</button>
+            <button class="tab special-tab hidden" id="ownerTab" type="button" aria-selected="false">✦ Owner</button>
 
           </nav>
 
@@ -1255,7 +1326,7 @@
 
           <div>
 
-            <h2>Select Shortcut</h2>
+            <h2>Quick Launch</h2>
 
             <p class="sub">Choose an app to edit browser tab title and favicon.</p>
 
@@ -1575,8 +1646,94 @@
         </div>
       </section>
 
+
+      <section id="calculatorSection" class="hidden">
+        <div class="section-heading"><div><h2>Calculator</h2><p class="sub">A simple calculator for quick maths.</p></div></div>
+        <div class="panel" style="max-width:420px">
+          <input id="calculatorDisplay" type="text" inputmode="decimal" value="0" aria-label="Calculator display" style="width:100%;padding:14px;font-size:1.5rem;text-align:right;border:1px solid var(--panel-border);border-radius:10px;background:rgba(0,0,0,.25);color:var(--text)">
+          <div id="calculatorKeys" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px">
+            <button class="primary-btn" type="button" data-calc="clear">C</button>
+            <button class="primary-btn" type="button" data-calc="back">⌫</button>
+            <button class="primary-btn" type="button" data-value="%">%</button>
+            <button class="primary-btn" type="button" data-value="/">÷</button>
+            <button class="primary-btn" type="button" data-value="7">7</button>
+            <button class="primary-btn" type="button" data-value="8">8</button>
+            <button class="primary-btn" type="button" data-value="9">9</button>
+            <button class="primary-btn" type="button" data-value="*">×</button>
+            <button class="primary-btn" type="button" data-value="4">4</button>
+            <button class="primary-btn" type="button" data-value="5">5</button>
+            <button class="primary-btn" type="button" data-value="6">6</button>
+            <button class="primary-btn" type="button" data-value="-">−</button>
+            <button class="primary-btn" type="button" data-value="1">1</button>
+            <button class="primary-btn" type="button" data-value="2">2</button>
+            <button class="primary-btn" type="button" data-value="3">3</button>
+            <button class="primary-btn" type="button" data-value="+">+</button>
+            <button class="primary-btn" type="button" data-value="0" style="grid-column:span 2">0</button>
+            <button class="primary-btn" type="button" data-value=",">,</button>
+            <button class="primary-btn" type="button" data-calc="equals">=</button>
+          </div>
+          <p class="status" id="calculatorStatus" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- SPECIAL / OWNER PANEL -->
+      <section id="managementSection" class="hidden">
+        <div class="section-heading">
+          <div>
+            <h2>Special Owner Panel</h2>
+            <p class="sub">Add games and manage custom games in the arcade.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3 id="accessPanelTitle">Game Manager</h3>
+          <p id="accessPanelDescription">Add a game by entering its name and playable link, then choose a cover image.</p>
+          <form id="addGameForm">
+            <label class="field-label" for="newGameTitle">Game name</label>
+            <input id="newGameTitle" type="text" maxlength="70" placeholder="e.g. My new game" required>
+            <label class="field-label" for="newGameUrl">Game link</label>
+            <input id="newGameUrl" type="text" inputmode="url" placeholder="https://example.com/game" required>
+            <div class="translator-actions">
+              <button class="primary-btn" type="submit">Add game to Arcade</button>
+              <span class="status" id="adminGameStatus" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h3>Add a missing game thumbnail</h3>
+          <p>Choose a game with no thumbnail. Drop an image from your files or drag an actual image from Google Images. Games with thumbnails are excluded and cannot be replaced.</p>
+          <label class="field-label" for="thumbnailGameSelect">Game</label>
+          <select id="thumbnailGameSelect" style="width:100%;padding:10px;border-radius:8px;background:var(--panel);color:var(--text);border:1px solid var(--panel-border)"><option value="">Loading games…</option></select>
+          <label class="field-label" for="thumbnailFileInput" style="display:block;margin-top:12px">Thumbnail image</label>
+          <div id="thumbnailDropZone" class="thumbnail-drop-zone" tabindex="0" role="button" aria-label="Drop a thumbnail image here or click to choose a file">
+            <strong>Drop a thumbnail image here</strong>
+            <span>Drag an image from Google Images or your files, or click to browse</span>
+            <input id="thumbnailFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+          </div>
+          <div class="translator-actions" style="margin-top:12px"><button class="primary-btn" id="saveGameThumbnailBtn" type="button">Save thumbnail</button><span class="status" id="thumbnailStatus" role="status" aria-live="polite"></span></div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h3>Access settings</h3>
+          <p>Remove your current Admin or Owner access from this browser. You can enter a keycode again whenever you need access.</p>
+          <button class="primary-btn" id="relinquishAccessBtn" type="button">Remove my access</button>
+          <span class="status" id="relinquishStatus" role="status" aria-live="polite"></span>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <h3>Custom games</h3>
+          <p>Games added here stay in this browser. Owner access can remove custom games.</p>
+          <div id="managedGamesList" class="games-catalog"></div>
+        </div>
+      </section>
+
     </main>
 
+  </div>
+
+  <button id="adminButton" type="button" aria-label="Enter keycode">KEYCODE</button>
+  <div id="keycodeOverlay" aria-hidden="true">
+    <div id="keycodeBox" role="dialog" aria-modal="true" aria-label="Keycode entry">
+      <input id="keycodeInput" type="password" inputmode="numeric" autocomplete="off" aria-label="Keycode" maxlength="12">
+      <div id="keycodeStatus" role="status" aria-live="polite"></div>
+    </div>
   </div>
 
   <script>
@@ -1859,8 +2016,20 @@
       baldi: { title: "Baldi's Basics", url: "https://www.miniplay.com/embed/baldis-basics-in-education-and-learning" },
       mario: { title: "Super Mario", url: "https://www.miniplay.com/embed/super-mario-html5" },
       sonicCD: { title: "Sonic CD", url: "https://www.retrogames.cc/embed/45295-sonic-cd-edition.html" },
-      deltarune: { title: "DELTARUNE Battle Simulator", url: "https://scratch.mit.edu/projects/613803664/embed" }
+      deltarune: { title: "DELTARUNE Battle Simulator", url: "https://scratch.mit.edu/projects/613803664/embed" },
+      kapi: {
+        title: "Friday Night Funkin' vs Kapi",
+        url: "https://fridaynightfunkin2.io/friday-night-funkin-vs-kapi-v2"
+      }
     };
+
+    const SHORTCUT_NAMES_KEY = "spaceArcadesShortcutNamesV1";
+    try {
+      const savedShortcutNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
+      Object.keys(apps).forEach(id => {
+        if (savedShortcutNames[id] && typeof savedShortcutNames[id] === "string") apps[id].name = savedShortcutNames[id];
+      });
+    } catch (error) { console.warn("Could not load saved shortcut names:", error); }
 
     let selectedId = "magma";
 
@@ -1877,6 +2046,8 @@
       const app = apps[id];
 
       appNameInput.value = app.name;
+      const cardName = document.querySelector(`[data-id="${id}"] .app-name`);
+      if (cardName) cardName.textContent = app.name;
 
       document.querySelectorAll(".app-card").forEach(card => {
 
@@ -1911,6 +2082,14 @@
       }
 
       apps[selectedId].name = newName;
+      try {
+        const savedNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
+        savedNames[selectedId] = newName;
+        localStorage.setItem(SHORTCUT_NAMES_KEY, JSON.stringify(savedNames));
+      } catch (error) {
+        status.textContent = "Could not save shortcut change in this browser.";
+        return;
+      }
 
       const cardTitle = document.querySelector(`[data-id="${selectedId}"] .app-name`);
 
@@ -1939,28 +2118,45 @@
         edit: { panel: "editSection", tab: "editTab" },
         games: { panel: "gamesSection", tab: "gamesTab" },
         translator: { panel: "translatorSection", tab: "translatorTab" },
-        hangout: { panel: "hangoutSection", tab: "hangoutTab" }
+        calculator: { panel: "calculatorSection", tab: "calculatorTab" },
+        hangout: { panel: "hangoutSection", tab: "hangoutTab" },
+        admin: { panel: "managementSection", tab: "adminTab" },
+        owner: { panel: "managementSection", tab: "ownerTab" }
       };
-
-      Object.entries(sections).forEach(([key, item]) => {
-        const active = key === section;
-        document.getElementById(item.panel).classList.toggle("hidden", !active);
+      Object.values(sections).forEach(item => {
         const tab = document.getElementById(item.tab);
-        tab.classList.toggle("active", active);
-        tab.setAttribute("aria-selected", String(active));
+        if (tab) {
+          tab.classList.remove("active");
+          tab.setAttribute("aria-selected", "false");
+        }
       });
-
-      // Return to the catalogue when opening Arcade, rather than showing a stale game.
+      [...new Set(Object.values(sections).map(item => item.panel))].forEach(id => {
+        document.getElementById(id)?.classList.add("hidden");
+      });
+      const selected = sections[section];
+      if (!selected) return;
+      document.getElementById(selected.panel).classList.remove("hidden");
+      const selectedTab = document.getElementById(selected.tab);
+      if (selectedTab) {
+        selectedTab.classList.add("active");
+        selectedTab.setAttribute("aria-selected", "true");
+      }
       if (section === "games" && !currentGameKey) {
         gamePlayerView.classList.add("hidden");
         gameCatalogView.classList.remove("hidden");
       }
     }
-
     document.getElementById("editTab").addEventListener("click", () => showSection("edit"));
     document.getElementById("gamesTab").addEventListener("click", () => showSection("games"));
     document.getElementById("translatorTab").addEventListener("click", () => showSection("translator"));
+    document.getElementById("calculatorTab").addEventListener("click", () => showSection("calculator"));
     document.getElementById("hangoutTab").addEventListener("click", () => showSection("hangout"));
+    document.getElementById("adminTab").addEventListener("click", () => {
+      if (accessMode === "admin") showSection("admin");
+    });
+    document.getElementById("ownerTab").addEventListener("click", () => {
+      if (accessMode === "owner") showSection("owner");
+    });
 
     /* EMBEDDED GAME PLAYER */
 
@@ -1982,7 +2178,8 @@
 
       playBtn.textContent = '▶';
 
-      const game = games[gameKey];
+      const game = games[gameKey] || configuredGames.find(item => item.id === gameKey) || customGames.find(item => item.id === gameKey);
+      if (!game) { currentGameKey = null; return; }
 
       gamePlayerTitle.textContent = game.title;
       document.getElementById('gameOpenTabBtn').classList.remove('hidden');
@@ -2013,6 +2210,7 @@
 
       gameCatalogView.classList.add("hidden");
       gamePlayerView.classList.remove("hidden");
+      document.getElementById("adminButton").classList.add("hidden");
 
     }
 
@@ -2024,6 +2222,7 @@
 
       gamePlayerView.classList.add("hidden");
       gameCatalogView.classList.remove("hidden");
+      document.getElementById("adminButton").classList.remove("hidden");
 
       const openTabButton = document.getElementById("gameOpenTabBtn");
       const fullscreenButton = document.getElementById("gameFullscreenBtn");
@@ -2044,9 +2243,7 @@
       }
     }
 
-    document.getElementById("slopeGameCard").addEventListener("click", () => openGame("slope"));
 
-    document.getElementById("spaceWavesGameCard").addEventListener("click", () => openGame("spaceWaves"));
 
     function openComingSoon() {
       audio.pause();
@@ -2063,18 +2260,9 @@
       gamePlayerView.classList.remove('hidden');
     }
 
-    document.getElementById("minecraftGameCard").addEventListener("click", () => openGame("minecraft"));
-    document.getElementById("grannyGameCard").addEventListener("click", () => openGame("granny"));
-    document.getElementById("fnaf1GameCard").addEventListener("click", () => openGame("fnaf1"));
-  document.getElementById("fnaf2GameCard").addEventListener("click", () => openGame("fnaf2"));
-  document.getElementById("fnaf3GameCard").addEventListener("click", () => openGame("fnaf3"));
-    document.getElementById("baldiGameCard").addEventListener("click", () => openGame("baldi"));
-    document.getElementById("marioGameCard").addEventListener("click", () => openGame("mario"));
-    document.getElementById("sonicCDGameCard").addEventListener("click", () => openGame("sonicCD"));
-    document.getElementById("deltaruneGameCard").addEventListener("click", () => openGame("deltarune"));
 
     document.getElementById("gameRefreshBtn").addEventListener("click", () => {
-      if (currentGameKey && games[currentGameKey]) openGame(currentGameKey);
+      if (currentGameKey && (games[currentGameKey] || configuredGames.some(item => item.id === currentGameKey) || customGames.some(item => item.id === currentGameKey))) openGame(currentGameKey);
     });
 
     const gameVolumeBtn = document.getElementById("gameVolumeBtn");
@@ -2128,8 +2316,8 @@
     document.getElementById("gameBackBtn").addEventListener("click", closeGame);
 
     document.getElementById("gameOpenTabBtn").addEventListener("click", () => {
-      const gameKey = Object.keys(games).find(key => games[key].title === gamePlayerTitle.textContent);
-      if (gameKey) window.open(games[gameKey].url, "_blank", "noopener,noreferrer");
+      const game = allGameEntries().find(item => item.title === gamePlayerTitle.textContent);
+      if (game) window.open(game.url, "_blank", "noopener,noreferrer");
     });
     document.getElementById("gameFullscreenBtn").addEventListener("click", async () => {
 
@@ -2269,53 +2457,618 @@
       translatorStatus.textContent = "";
     });
 
+
+
+    /* BASIC CALCULATOR */
+    const calculatorDisplay = document.getElementById("calculatorDisplay");
+    const calculatorStatus = document.getElementById("calculatorStatus");
+    document.getElementById("calculatorKeys").addEventListener("click", event => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      const action = button.dataset.calc;
+      const value = button.dataset.value;
+      if (action === "clear") {
+        calculatorDisplay.value = "0";
+        calculatorStatus.textContent = "";
+      } else if (action === "back") {
+        calculatorDisplay.value = calculatorDisplay.value.slice(0, -1) || "0";
+      } else if (action === "equals") {
+        const expression = calculatorDisplay.value.replace(/,/g, ".");
+        if (!/^[0-9+*\/().%\s-]+$/.test(expression)) {
+          calculatorStatus.textContent = "Invalid calculation.";
+          return;
+        }
+        try {
+          const result = Function('"use strict"; return (' + expression + ')')();
+          if (!Number.isFinite(result)) throw new Error("Invalid result");
+          calculatorDisplay.value = String(Number(result.toFixed(10))).replace(/\./g, ",");
+          calculatorStatus.textContent = "";
+        } catch {
+          calculatorStatus.textContent = "Check the calculation and try again.";
+        }
+      } else if (value) {
+        calculatorDisplay.value = calculatorDisplay.value === "0" && /[0-9,]/.test(value)
+          ? value : calculatorDisplay.value + value;
+      }
+    });
+
+    /* GAME CATALOGUE + ADMIN / OWNER ACCESS */
+    const CUSTOM_GAMES_KEY = "spaceArcadesCustomGamesV1";
+    const customGames = loadCustomGames();
+    const ACCESS_MODE_KEY = "spaceArcadesAccessModeV1";
+    let accessMode = localStorage.getItem(ACCESS_MODE_KEY);
+    if (accessMode !== "admin" && accessMode !== "owner") accessMode = null;
+
+    function loadCustomGames() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(CUSTOM_GAMES_KEY) || "[]");
+        return Array.isArray(parsed) ? parsed.filter(g => g && typeof g.title === "string" && typeof g.url === "string") : [];
+      } catch { return []; }
+    }
+
+    function saveCustomGames() {
+      try {
+        localStorage.setItem(CUSTOM_GAMES_KEY, JSON.stringify(customGames));
+        return true;
+      } catch (error) {
+        console.error("Could not save custom games:", error);
+        return false;
+      }
+    }
+
+    function safeGameUrl(value) {
+      try {
+        const url = new URL(value.trim());
+        return ["http:", "https:"].includes(url.protocol) ? url.href : null;
+      } catch { return null; }
+    }
+
+    function allGameEntries() {
+      return [
+        ...Object.entries(games).map(([key, game]) => ({ key, ...game, custom: false })),
+        ...customGames.map(game => ({ key: game.id, ...game, custom: true }))
+      ];
+    }
+
+    function renderGameCatalog() {
+      const catalog = document.querySelector("#gamesCatalogView .games-catalog");
+      if (!catalog) return;
+
+      // Existing game cards and their supplied thumbnail files are deliberately
+      // left untouched. Only the three newly requested games and custom games
+      // are appended here.
+      const addedKeys = ["kapi", "tcgOne", "onePiecePacks"];
+      addedKeys.forEach(key => {
+        const game = games[key];
+        if (!game || document.getElementById("added-" + key)) return;
+        const card = document.createElement("button");
+        card.type = "button";
+        card.id = "added-" + key;
+        card.className = "game-card";
+        card.addEventListener("click", () => openGame(key));
+
+        const image = document.createElement("img");
+        image.className = "game-thumbnail";
+        image.alt = game.title;
+        image.src = game.image;
+        image.onerror = () => { image.style.display = "none"; };
+
+        const body = document.createElement("div");
+        body.className = "game-card-body";
+        const title = document.createElement("h3");
+        title.textContent = game.title;
+        body.append(image, title);
+        card.appendChild(body);
+        catalog.appendChild(card);
+      });
+
+      customGames.forEach(game => {
+        if (document.getElementById("custom-card-" + game.id)) return;
+        const card = document.createElement("button");
+        card.type = "button";
+        card.id = "custom-card-" + game.id;
+        card.className = "game-card";
+        card.addEventListener("click", () => openGame(game.id));
+        const body = document.createElement("div");
+        body.className = "game-card-body";
+        const title = document.createElement("h3");
+        title.textContent = game.title;
+        body.appendChild(title);
+        if (game.image) {
+          const image = document.createElement("img");
+          image.className = "game-thumbnail";
+          image.alt = game.title;
+          image.src = game.image;
+          image.onerror = () => { image.style.display = "none"; };
+          card.appendChild(image);
+        }
+        card.appendChild(body);
+        catalog.appendChild(card);
+      });
+
+      const count = document.querySelector("#gamesCatalogView .count");
+      if (count) count.textContent = catalog.querySelectorAll(".game-card").length + " games";
+    }
+
+    const DELETED_GAMES_KEY = "spaceArcadesDeletedGamesV1";
+    const deletedGameIds = new Set(JSON.parse(localStorage.getItem(DELETED_GAMES_KEY) || "[]"));
+    const configuredGames = [
+      {
+        id: "pokemonTcg",
+        title: "Pokémon TCG (TCG One)",
+        url: "https://tcg.one/play"
+      },
+      {
+        id: "onePiecePacks",
+        title: "One Piece Pack Simulator",
+        url: "https://onepiecepacksimulator.com/"
+      }
+    ];
+
+    function saveDeletedGames() {
+      localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
+    }
+
+    function existingCardId(gameKey) {
+      const ids = {
+        slope: "slopeGameCard", spaceWaves: "spaceWavesGameCard",
+        minecraft: "minecraftGameCard", granny: "grannyGameCard",
+        fnaf1: "fnaf1GameCard", fnaf2: "fnaf2GameCard", fnaf3: "fnaf3GameCard",
+        baldi: "baldiGameCard", mario: "marioGameCard",
+        sonicCD: "sonicCDGameCard", deltarune: "deltaruneGameCard"
+      };
+      return ids[gameKey] || ("added-" + gameKey);
+    }
+
+    function allGameEntries() {
+      return [
+        ...Object.entries(games).map(([key, game]) => ({ key, ...game, custom: false })),
+        ...configuredGames.map(game => ({ key: game.id, ...game, custom: false })),
+        ...customGames.map(game => ({ key: game.id, ...game, custom: true }))
+      ];
+    }
+
+    function appendGameCard(game, key) {
+      const catalog = document.querySelector("#gamesCatalogView .games-catalog");
+      if (!catalog || deletedGameIds.has(key) || document.getElementById("added-" + key)) return;
+      const card = document.createElement("button");
+      card.type = "button";
+      card.id = "added-" + key;
+      card.className = "game-card";
+      card.addEventListener("click", () => openGame(key));
+      const image = document.createElement("img");
+      image.className = "game-thumbnail";
+      image.alt = game.title;
+      if (game.image) image.src = game.image;
+      else image.style.display = "none";
+      image.onerror = () => { image.style.display = "none"; };
+      const body = document.createElement("div");
+      body.className = "game-card-body";
+      const title = document.createElement("h3");
+      title.textContent = game.title;
+      body.appendChild(title);
+      card.append(image, body);
+      catalog.appendChild(card);
+      const count = document.querySelector("#gamesCatalogView .count");
+      if (count) count.textContent = catalog.querySelectorAll(".game-card").length + " games";
+    }
+
+    function renderGameCatalog() {
+      configuredGames.forEach(game => appendGameCard(game, game.id));
+      appendGameCard(games.kapi, "kapi");
+      customGames.forEach(game => appendGameCard(game, game.id));
+      Object.keys(games).forEach(key => {
+        if (deletedGameIds.has(key)) {
+          const card = document.getElementById(existingCardId(key));
+          if (card) card.remove();
+        }
+      });
+      const count = document.querySelector("#gamesCatalogView .count");
+      if (count) count.textContent = document.querySelectorAll("#gamesCatalogView .games-catalog .game-card").length + " games";
+    }
+
+    function renderManagedGames() {
+      const list = document.getElementById("managedGamesList");
+      if (!list) return;
+      list.replaceChildren();
+
+      const heading = document.createElement("h4");
+      heading.textContent = "Games in Arcade";
+      list.appendChild(heading);
+
+      allGameEntries().forEach(game => {
+        if (deletedGameIds.has(game.key)) return;
+        const row = document.createElement("div");
+        row.className = "managed-game-row";
+        const name = document.createElement("span");
+        name.className = "managed-game-name";
+        name.textContent = game.title;
+        if (game.image) {
+          const img = document.createElement("img");
+          img.src = game.image;
+          img.alt = "";
+          row.appendChild(img);
+        }
+        row.appendChild(name);
+
+        if (accessMode === "owner") {
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.className = "delete-game-btn";
+          remove.textContent = "Remove";
+          remove.addEventListener("click", () => {
+            if (!confirm('Remove "' + game.title + '" from Arcade? You can restore it later.')) return;
+            deletedGameIds.add(game.key);
+            saveDeletedGames();
+            if (game.custom) {
+              const idx = customGames.findIndex(item => item.id === game.key);
+              if (idx >= 0) {
+                const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
+                saved[game.key] = customGames[idx];
+                localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved));
+                customGames.splice(idx, 1);
+                saveCustomGames();
+              }
+            }
+            const card = document.getElementById(existingCardId(game.key));
+            if (card) card.remove();
+            renderManagedGames();
+            if (currentGameKey === game.key) closeGame();
+          });
+          row.appendChild(remove);
+        }
+        list.appendChild(row);
+      });
+
+      if (accessMode === "owner") {
+        const restoreHeading = document.createElement("h4");
+        restoreHeading.textContent = "Removed games — restore";
+        restoreHeading.style.marginTop = "18px";
+        list.appendChild(restoreHeading);
+        const removed = [...deletedGameIds];
+        if (!removed.length) {
+          const empty = document.createElement("p");
+          empty.textContent = "No removed games.";
+          list.appendChild(empty);
+        }
+        removed.forEach(key => {
+          let game = allGameEntries().find(item => item.key === key) || games[key];
+          if (!game && key.startsWith("custom-")) {
+            const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
+            game = saved[key];
+          }
+          if (!game) return;
+          const row = document.createElement("div");
+          row.className = "managed-game-row";
+          const name = document.createElement("span");
+          name.className = "managed-game-name";
+          name.textContent = game.title || key;
+          const restore = document.createElement("button");
+          restore.type = "button";
+          restore.className = "primary-btn";
+          restore.textContent = "Restore";
+          restore.addEventListener("click", () => {
+            deletedGameIds.delete(key);
+            saveDeletedGames();
+            if (key.startsWith("custom-")) {
+              const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
+              if (saved[key]) {
+                customGames.push(saved[key]);
+                delete saved[key];
+                localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved));
+                saveCustomGames();
+              }
+            }
+            location.reload();
+          });
+          row.append(name, restore);
+          list.appendChild(row);
+        });
+      }
+    }
+
+    const GAME_THUMBNAILS_KEY = "spaceArcadesGameThumbnailsV1";
+    function loadGameThumbnails() {
+      try { return JSON.parse(localStorage.getItem(GAME_THUMBNAILS_KEY) || "{}"); } catch { return {}; }
+    }
+    let savedGameThumbnails = loadGameThumbnails();
+
+    function findGameCard(key) {
+      const id = existingCardId(key);
+      return document.getElementById(id) || document.getElementById("custom-card-" + key);
+    }
+    function gameHasThumbnail(game) {
+      if (savedGameThumbnails[game.key]) return true;
+      if (game.image) return true;
+      const card = findGameCard(game.key);
+      if (!card) return false;
+      const img = card.querySelector("img.game-thumbnail");
+      return !!(img && img.getAttribute("src") && img.style.display !== "none");
+    }
+    function refreshThumbnailSelector() {
+      const select = document.getElementById("thumbnailGameSelect");
+      if (!select) return;
+      const previous = select.value;
+      select.replaceChildren();
+      const missing = allGameEntries().filter(game => !deletedGameIds.has(game.key) && !gameHasThumbnail(game));
+      if (!missing.length) {
+        select.add(new Option("All games already have thumbnails", ""));
+        return;
+      }
+      select.add(new Option("Select a game…", ""));
+      missing.forEach(game => select.add(new Option(game.title, game.key)));
+      if (missing.some(game => game.key === previous)) select.value = previous;
+    }
+    function applySavedGameThumbnails() {
+      Object.entries(savedGameThumbnails).forEach(([key, src]) => {
+        const card = findGameCard(key);
+        if (!card) return;
+        const existingImage = card.querySelector("img.game-thumbnail");
+        if (existingImage && existingImage.style.display !== "none") return;
+        if (existingImage) existingImage.remove();
+        const image = document.createElement("img");
+        image.className = "game-thumbnail";
+        image.dataset.customThumbnail = "true";
+        image.alt = "Game thumbnail";
+        image.src = src;
+        const body = card.querySelector(".game-card-body");
+        card.insertBefore(image, body || null);
+      });
+    }
+    function saveMissingGameThumbnail(file) {
+      const key = document.getElementById("thumbnailGameSelect").value;
+      const status = document.getElementById("thumbnailStatus");
+      const game = allGameEntries().find(item => item.key === key);
+      if (!game) { status.textContent = "Select a game without a thumbnail first."; return; }
+      if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. Existing thumbnails cannot be replaced."; refreshThumbnailSelector(); return; }
+      if (!file || !file.type.startsWith("image/")) { status.textContent = "Drop or choose an image file first."; return; }
+      if (file.size > 3 * 1024 * 1024) { status.textContent = "Please choose an image smaller than 3 MB."; return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Recheck immediately before saving, so an existing thumbnail is never overwritten.
+        if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. It was not changed."; refreshThumbnailSelector(); return; }
+        savedGameThumbnails[key] = reader.result;
+        try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
+        catch { delete savedGameThumbnails[key]; status.textContent = "Not enough browser storage to save this image."; return; }
+        applySavedGameThumbnails();
+        status.textContent = "Thumbnail saved for " + game.title + ".";
+        document.getElementById("thumbnailFileInput").value = "";
+        refreshThumbnailSelector();
+      };
+      reader.onerror = () => { status.textContent = "Could not read that image file."; };
+      reader.readAsDataURL(file);
+    }
+    document.getElementById("saveGameThumbnailBtn").addEventListener("click", () => {
+      const file = document.getElementById("thumbnailFileInput").files[0];
+      saveMissingGameThumbnail(file);
+    });
+    const thumbnailDropZone = document.getElementById("thumbnailDropZone");
+    const thumbnailFileInput = document.getElementById("thumbnailFileInput");
+    thumbnailDropZone.addEventListener("dragover", event => {
+      event.preventDefault();
+      if (document.getElementById("thumbnailGameSelect").value) thumbnailDropZone.classList.add("drag-over");
+    });
+    thumbnailDropZone.addEventListener("dragleave", event => {
+      if (!thumbnailDropZone.contains(event.relatedTarget)) thumbnailDropZone.classList.remove("drag-over");
+    });
+    thumbnailDropZone.addEventListener("drop", event => {
+      event.preventDefault();
+      thumbnailDropZone.classList.remove("drag-over");
+      const status = document.getElementById("thumbnailStatus");
+      const game = allGameEntries().find(item => item.key === document.getElementById("thumbnailGameSelect").value);
+      if (!game) { status.textContent = "Select a game without a thumbnail first."; return; }
+      if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. Existing thumbnails cannot be replaced."; refreshThumbnailSelector(); return; }
+
+      // Local image files are accepted directly.
+      const file = event.dataTransfer.files && event.dataTransfer.files[0];
+      if (file) {
+        if (!file.type || !file.type.startsWith("image/")) { status.textContent = "Only image files can be dropped here."; return; }
+        try { const transfer = new DataTransfer(); transfer.items.add(file); thumbnailFileInput.files = transfer.files; } catch {}
+        saveMissingGameThumbnail(file);
+        return;
+      }
+
+      // Google Images may provide an actual image URL in uri-list or plain text.
+      // A Google result-page URL is not accepted; the URL must load as an image.
+      const raw = event.dataTransfer.getData("text/uri-list") || event.dataTransfer.getData("text/plain");
+      const imageUrl = (raw || "").split(/\r?\n/).map(value => value.trim()).find(value => value && !value.startsWith("#"));
+      if (!imageUrl) { status.textContent = "Drop an image from Google Images or an image file from your device."; return; }
+      let parsed;
+      try { parsed = new URL(imageUrl); } catch { status.textContent = "That drop is not a valid image URL. Drag the actual image, not its search result page."; return; }
+      if (!/^https?:$/.test(parsed.protocol)) { status.textContent = "Only web image URLs are accepted."; return; }
+      status.textContent = "Checking dropped image…";
+      const probe = new Image();
+      probe.onload = () => {
+        if (!probe.naturalWidth || !probe.naturalHeight) { status.textContent = "That link is not an image."; return; }
+        // Recheck before saving; never overwrite an existing thumbnail.
+        if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. It was not changed."; refreshThumbnailSelector(); return; }
+        savedGameThumbnails[game.key] = parsed.href;
+        try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
+        catch { delete savedGameThumbnails[game.key]; status.textContent = "Not enough browser storage to save this image link."; return; }
+        applySavedGameThumbnails();
+        status.textContent = "Thumbnail image link saved for " + game.title + ".";
+        refreshThumbnailSelector();
+      };
+      probe.onerror = () => { status.textContent = "Could not load that image. Drag the actual image from Google Images, not the page or thumbnail link."; };
+      probe.src = parsed.href;
+    });
+    thumbnailDropZone.addEventListener("click", event => {
+      if (event.target !== thumbnailFileInput) thumbnailFileInput.click();
+    });
+    thumbnailDropZone.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); thumbnailFileInput.click(); }
+    });
+    thumbnailFileInput.addEventListener("change", () => {
+      const file = thumbnailFileInput.files[0];
+      if (file) document.getElementById("thumbnailStatus").textContent = "Selected: " + file.name + ". Click Save thumbnail.";
+    });
+
+    function openAccessPanel(mode) {
+      accessMode = mode;
+      document.getElementById("accessPanelTitle").textContent =
+        mode === "owner" ? "Owner Panel" : "Admin Panel";
+      document.getElementById("accessPanelDescription").textContent =
+        mode === "owner"
+          ? "Owner access: add games, remove games, and restore removed games. Your Owner access stays active after reloading."
+          : "Admin access: add games. Add your own thumbnail image files to the website folder yourself.";
+      renderManagedGames();
+      applySavedGameThumbnails();
+      refreshThumbnailSelector();
+      showSection(mode);
+    }
+
+    const keycodeOverlay = document.getElementById("keycodeOverlay");
+    const keycodeInput = document.getElementById("keycodeInput");
+    const keycodeStatus = document.getElementById("keycodeStatus");
+    let keycodeCloseTimer = null;
+
+    function closeKeycodeBox() {
+      keycodeOverlay.classList.remove("open");
+      keycodeOverlay.setAttribute("aria-hidden", "true");
+      window.setTimeout(() => { keycodeInput.value = ""; keycodeStatus.textContent = ""; keycodeStatus.className = ""; }, 650);
+    }
+    function showKeycodeFeedback(message, type) {
+      keycodeStatus.textContent = message;
+      keycodeStatus.className = type;
+      window.clearTimeout(keycodeCloseTimer);
+      keycodeCloseTimer = window.setTimeout(closeKeycodeBox, 1050);
+    }
+    document.getElementById("adminButton").addEventListener("click", () => {
+      window.clearTimeout(keycodeCloseTimer);
+      keycodeStatus.textContent = "";
+      keycodeStatus.className = "";
+      keycodeOverlay.classList.add("open");
+      keycodeOverlay.setAttribute("aria-hidden", "false");
+      window.setTimeout(() => keycodeInput.focus(), 250);
+    });
+    keycodeOverlay.addEventListener("click", event => { if (event.target === keycodeOverlay) closeKeycodeBox(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && keycodeOverlay.classList.contains("open")) closeKeycodeBox(); });
+    keycodeInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        const code = keycodeInput.value.trim();
+        if (accessMode === "owner" && code === "070814") {
+          showKeycodeFeedback("BETTER KEY ALREADY ACTIVE", "error");
+        } else if (code === "070814") {
+          accessMode = "admin";
+          localStorage.setItem(ACCESS_MODE_KEY, accessMode);
+          document.getElementById("adminTab").classList.remove("hidden");
+          document.getElementById("ownerTab").classList.add("hidden");
+          openAccessPanel("admin");
+          showKeycodeFeedback("ACCESS GRANTED", "success");
+        } else if (code === "0708") {
+          accessMode = "owner";
+          localStorage.setItem(ACCESS_MODE_KEY, accessMode);
+          document.getElementById("ownerTab").classList.remove("hidden");
+          document.getElementById("adminTab").classList.add("hidden");
+          openAccessPanel("owner");
+          showKeycodeFeedback("ACCESS GRANTED", "success");
+        } else {
+          showKeycodeFeedback("INCORRECT KEYCODE", "error");
+          keycodeInput.value = "";
+        }
+      }
+    });
+
+    document.getElementById("relinquishAccessBtn").addEventListener("click", () => {
+      const oldMode = accessMode;
+      if (!oldMode) return;
+      const roleName = oldMode === "owner" ? "Owner" : "Admin";
+      if (!confirm(`Remove your ${roleName} access on this browser?`)) return;
+      accessMode = null;
+      localStorage.removeItem(ACCESS_MODE_KEY);
+      document.getElementById("adminTab").classList.add("hidden");
+      document.getElementById("ownerTab").classList.add("hidden");
+      document.getElementById("relinquishStatus").textContent = `${roleName} access removed.`;
+      showSection("edit");
+    });
+
+    // Keep access unlocked after reload, but always start on Quick Launch.
+    if (accessMode === "owner") {
+      document.getElementById("ownerTab").classList.remove("hidden");
+      document.getElementById("adminTab").classList.add("hidden");
+      openAccessPanel("owner");
+    } else if (accessMode === "admin") {
+      document.getElementById("adminTab").classList.remove("hidden");
+      openAccessPanel("admin");
+    }
+
+    document.getElementById("addGameForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const title = document.getElementById("newGameTitle").value.trim();
+      const url = safeGameUrl(document.getElementById("newGameUrl").value);
+      const status = document.getElementById("adminGameStatus");
+      if (!title || !url) {
+        status.textContent = "Enter a game name and a valid http/https link.";
+        return;
+      }
+
+      const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+      // No thumbnail uploader or auto-generated thumbnail: the site owner adds image files manually.
+      customGames.push({ id, title, url, image: "" });
+      if (!saveCustomGames()) {
+        customGames.pop();
+        status.textContent = "Could not save this game in this browser.";
+        return;
+      }
+      appendGameCard(customGames[customGames.length - 1], id);
+      renderManagedGames();
+      document.getElementById("addGameForm").reset();
+      status.textContent = "Game added to Arcade!";
+    });
+
+    // Restore the original built-in game-card actions without changing their thumbnails.
+    [
+      ["slopeGameCard", "slope"], ["spaceWavesGameCard", "spaceWaves"],
+      ["minecraftGameCard", "minecraft"], ["grannyGameCard", "granny"],
+      ["fnaf1GameCard", "fnaf1"], ["fnaf2GameCard", "fnaf2"],
+      ["fnaf3GameCard", "fnaf3"], ["baldiGameCard", "baldi"],
+      ["marioGameCard", "mario"], ["sonicCDGameCard", "sonicCD"],
+      ["deltaruneGameCard", "deltarune"]
+    ].forEach(([elementId, gameKey]) => {
+      const card = document.getElementById(elementId);
+      if (card) card.addEventListener("click", () => openGame(gameKey));
+    });
+
+    // Add the new catalogue cards without rebuilding or modifying any existing game cards.
+    renderGameCatalog();
+    applySavedGameThumbnails();
+    refreshThumbnailSelector();
+    Object.keys(games).forEach(key => {
+      if (deletedGameIds.has(key)) {
+        const card = document.getElementById(existingCardId(key));
+        if (card) card.remove();
+      }
+    });
+    fetch("config.json")
+      .then(response => {
+        if (!response.ok) throw new Error("config.json unavailable");
+        return response.json();
+      })
+      .then(config => {
+        if (Array.isArray(config.games)) {
+          config.games.forEach(item => {
+            if (!item || !item.id || !item.title || !item.url) return;
+            const index = configuredGames.findIndex(game => game.id === item.id);
+            if (index >= 0) configuredGames[index] = item;
+            else if (item.id !== "kapi") configuredGames.push(item);
+          });
+          renderGameCatalog();
+          applySavedGameThumbnails();
+          refreshThumbnailSelector();
+        }
+      })
+      .catch(() => {
+        // Local fallback entries remain available if config.json cannot be fetched.
+      });
+
+
     selectApp("magma");
 
   </script>
 
-  <!-- ADMIN BUTTON -->
-<style>
-  #adminButton {
-    position: fixed;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 10px 24px;
-    background: #111;
-    color: white;
-    border: 1px solid white;
-    border-radius: 25px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 99999;
-    box-shadow: 0 0 12px rgba(255,255,255,0.25);
-  }
-
-  #adminButton:hover {
-    background: #333;
-  }
-</style>
-
-<button id="adminButton" type="button">Admin</button>
-
-<script>
-  document.getElementById("adminButton").addEventListener("click", function () {
-    const password = prompt("Enter Admin Password:");
-
-    if (password === null) return;
-
-    if (password === "070814") {
-      alert("Admin access granted!");
-    } else {
-      alert("Incorrect password!");
-    }
-  });
-</script>
 
 </body>
 
 </html>
-
 
 
