@@ -2684,8 +2684,9 @@
         const response = await fetch(SHARED_API_URL, { cache: "no-store" });
         if (!response.ok) throw new Error("Shared data could not be loaded");
         const result = await response.json();
-        if (!result.initialized || !result.state) { sharedDataReady = true; return; }
-        const state = result.state;
+        const state = result && result.state ? result.state : {
+          customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {}
+        };
         customGames.splice(0, customGames.length, ...(Array.isArray(state.customGames) ? state.customGames : []));
         deletedGameIds.clear();
         (Array.isArray(state.deletedGameIds) ? state.deletedGameIds : []).forEach(id => deletedGameIds.add(id));
@@ -2707,6 +2708,20 @@
         sharedDataReady = true;
       }
     }
+
+    // Refresh the shared catalogue when visitors return to either website tab.
+    // Both GitHub Pages and Vercel read from the same Vercel API / Neon database.
+    let sharedRefreshInProgress = false;
+    async function refreshSharedState() {
+      if (sharedRefreshInProgress) return;
+      sharedRefreshInProgress = true;
+      try { await loadSharedState(); }
+      finally { sharedRefreshInProgress = false; }
+    }
+    window.addEventListener("focus", refreshSharedState);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshSharedState();
+    });
 
     function existingCardId(gameKey) {
       const ids = {
