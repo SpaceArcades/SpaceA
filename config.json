@@ -27,9 +27,20 @@
       "glow": "purple",
       "canRelinquishAccess": true
     },
+    "coOwner": {
+      "label": "✦ Co-Owner",
+      "code": "0708",
+      "permissions": [
+        "add-games",
+        "remove-games",
+        "restore-games"
+      ],
+      "glow": "orange",
+      "canRelinquishAccess": true
+    },
     "owner": {
       "label": "✦ Owner",
-      "code": "0708",
+      "code": "1605",
       "permissions": [
         "add-games",
         "remove-games",
