@@ -13,10 +13,12 @@ function safeEqual(a, b) {
   return aa.length === bb.length && timingSafeEqual(aa, bb);
 }
 
-function authorized(role, code) {
+function authorizationError(role, code) {
   const envName = { admin: "SPACEARCADES_ADMIN_CODE", coowner: "SPACEARCADES_COOWNER_CODE", owner: "SPACEARCADES_OWNER_CODE" }[role];
-  if (!envName || !process.env[envName]) return false;
-  return safeEqual(code, process.env[envName]);
+  if (!envName) return "Unknown access role";
+  if (!process.env[envName]) return "Vercel is missing " + envName + ". Add it in Project Settings → Environment Variables, then redeploy.";
+  if (!safeEqual(code, process.env[envName])) return "The " + role + " access code does not match the Vercel environment variable.";
+  return null;
 }
 
 async function readState() {
@@ -52,7 +54,8 @@ export default async function handler(req, res) {
   try {
     const { action, role, code, state } = req.body || {};
     if (action !== "save") return res.status(400).json({ error: "Unknown action" });
-    if (!authorized(role, code)) return res.status(403).json({ error: "Invalid role credentials" });
+    const authError = authorizationError(role, code);
+    if (authError) return res.status(403).json({ error: authError });
     if (!state || !Array.isArray(state.customGames) || !Array.isArray(state.deletedGameIds)) {
       return res.status(400).json({ error: "Invalid game data" });
     }
