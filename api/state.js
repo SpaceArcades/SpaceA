@@ -26,7 +26,19 @@ async function readState() {
 }
 
 export default async function handler(req, res) {
+  const origin = req.headers.origin;
+  const allowedOrigins = new Set([
+    "https://spacearcades.github.io",
+    "https://space-gules-three.vercel.app"
+  ]);
+  if (allowedOrigins.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cache-Control", "no-store, max-age=0");
+  if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method === "GET") {
     try { return res.status(200).json(await readState()); }
     catch (error) { return res.status(500).json({ error: "Shared data unavailable", detail: error.message }); }
@@ -37,6 +49,9 @@ export default async function handler(req, res) {
     const { action, role, code, state } = req.body || {};
     if (action !== "save") return res.status(400).json({ error: "Unknown action" });
     if (!authorized(role, code)) return res.status(403).json({ error: "Invalid role credentials" });
+    if (!state || !Array.isArray(state.customGames) || !Array.isArray(state.deletedGameIds)) {
+      return res.status(400).json({ error: "Invalid game data" });
+    }
     if (role === "admin") {
       // Admins may add games, but cannot change deletion or restore lists.
       const current = await readState();
@@ -47,9 +62,6 @@ export default async function handler(req, res) {
       const oldIds = new Set((current.state.customGames || []).map(g => g.id));
       const newIds = new Set((incoming.customGames || []).map(g => g.id));
       if ([...(oldIds)].some(id => !newIds.has(id))) return res.status(403).json({ error: "Admins cannot remove games" });
-    }
-    if (!state || !Array.isArray(state.customGames) || !Array.isArray(state.deletedGameIds)) {
-      return res.status(400).json({ error: "Invalid game data" });
     }
     if (JSON.stringify(state).length > 4_000_000) return res.status(413).json({ error: "Data is too large. Use smaller thumbnails." });
     const clean = {
