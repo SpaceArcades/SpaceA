@@ -2936,7 +2936,7 @@
       if (!game) { status.textContent = "Select a game without a thumbnail first."; return; }
       if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. Existing thumbnails cannot be replaced."; refreshThumbnailSelector(); return; }
       if (!file || !file.type.startsWith("image/")) { status.textContent = "Drop or choose an image file first."; return; }
-      if (file.size > 3 * 1024 * 1024) { status.textContent = "Please choose an image smaller than 3 MB."; return; }
+      if (file.size > 1.5 * 1024 * 1024) { status.textContent = "Please choose an image smaller than 1.5 MB so it fits safely in the shared database."; return; }
       const reader = new FileReader();
       reader.onload = async () => {
         // Recheck immediately before saving, so an existing thumbnail is never overwritten.
