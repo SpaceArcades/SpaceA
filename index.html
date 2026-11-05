@@ -2656,24 +2656,26 @@
       };
     }
 
-    function queueSharedSave() {
-      if (!sharedDataReady) return;
+    async function saveSharedStateNow() {
+      if (!sharedDataReady) throw new Error("Shared data is still loading. Please try again.");
       const role = accessMode;
       const code = sessionStorage.getItem(SHARED_CODE_KEY) || "";
-      if (!role || !code) return;
+      if (!role || !code) throw new Error("Please enter your access code again.");
+      const response = await fetch(SHARED_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save", role, code, state: sharedSnapshot() })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.error || ("Save failed (" + response.status + ")"));
+      return true;
+    }
+
+    function queueSharedSave() {
+      if (!sharedDataReady) return;
       clearTimeout(sharedSaveTimer);
-      sharedSaveTimer = setTimeout(async () => {
-        try {
-          const response = await fetch(SHARED_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "save", role, code, state: sharedSnapshot() })
-          });
-          if (!response.ok) {
-            const result = await response.json().catch(() => ({}));
-            console.error("Shared save failed:", result.error || response.statusText);
-          }
-        } catch (error) { console.error("Shared save failed:", error); }
+      sharedSaveTimer = setTimeout(() => {
+        saveSharedStateNow().catch(error => console.error("Shared save failed:", error));
       }, 250);
     }
 
@@ -3111,7 +3113,7 @@
       openAccessPanel("admin");
     }
 
-    document.getElementById("addGameForm").addEventListener("submit", event => {
+    document.getElementById("addGameForm").addEventListener("submit", async event => {
       event.preventDefault();
       const title = document.getElementById("newGameTitle").value.trim();
       const url = safeGameUrl(document.getElementById("newGameUrl").value);
@@ -3131,8 +3133,15 @@
       }
       appendGameCard(customGames[customGames.length - 1], id);
       renderManagedGames();
-      document.getElementById("addGameForm").reset();
-      status.textContent = "Game added to Arcade!";
+      status.textContent = "Saving to shared database…";
+      try {
+        await saveSharedStateNow();
+        document.getElementById("addGameForm").reset();
+        status.textContent = "Published! Everyone can now see this game.";
+      } catch (error) {
+        status.textContent = "Saved only in this browser — shared save failed: " + error.message;
+        console.error("SpaceArcades publish error:", error);
+      }
     });
 
     // Restore the original built-in game-card actions without changing their thumbnails.
