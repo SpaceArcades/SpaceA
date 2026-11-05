@@ -2938,17 +2938,29 @@
       if (!file || !file.type.startsWith("image/")) { status.textContent = "Drop or choose an image file first."; return; }
       if (file.size > 3 * 1024 * 1024) { status.textContent = "Please choose an image smaller than 3 MB."; return; }
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         // Recheck immediately before saving, so an existing thumbnail is never overwritten.
         if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. It was not changed."; refreshThumbnailSelector(); return; }
+        const previousThumbnail = savedGameThumbnails[key];
         savedGameThumbnails[key] = reader.result;
         try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
-        catch { delete savedGameThumbnails[key]; status.textContent = "Not enough browser storage to save this image."; return; }
-        queueSharedSave();
+        catch { if (previousThumbnail === undefined) delete savedGameThumbnails[key]; else savedGameThumbnails[key] = previousThumbnail; status.textContent = "Not enough browser storage to save this image."; return; }
         applySavedGameThumbnails();
-        status.textContent = "Thumbnail saved for " + game.title + ".";
-        document.getElementById("thumbnailFileInput").value = "";
-        refreshThumbnailSelector();
+        status.textContent = "Saving thumbnail to shared database…";
+        try {
+          await saveSharedStateNow();
+          status.textContent = "Thumbnail saved and published for " + game.title + ".";
+          document.getElementById("thumbnailFileInput").value = "";
+          refreshThumbnailSelector();
+        } catch (error) {
+          if (previousThumbnail === undefined) delete savedGameThumbnails[key]; else savedGameThumbnails[key] = previousThumbnail;
+          localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+          const card = findGameCard(key);
+          const addedImage = card && card.querySelector('img[data-custom-thumbnail="true"]');
+          if (addedImage) addedImage.remove();
+          status.textContent = "Thumbnail saved only in this browser — shared save failed: " + error.message;
+          refreshThumbnailSelector();
+        }
       };
       reader.onerror = () => { status.textContent = "Could not read that image file."; };
       reader.readAsDataURL(file);
@@ -2997,13 +3009,24 @@
         if (!probe.naturalWidth || !probe.naturalHeight) { status.textContent = "That link is not an image."; return; }
         // Recheck before saving; never overwrite an existing thumbnail.
         if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. It was not changed."; refreshThumbnailSelector(); return; }
+        const previousThumbnail = savedGameThumbnails[game.key];
         savedGameThumbnails[game.key] = parsed.href;
         try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
-        catch { delete savedGameThumbnails[game.key]; status.textContent = "Not enough browser storage to save this image link."; return; }
-        queueSharedSave();
+        catch { if (previousThumbnail === undefined) delete savedGameThumbnails[game.key]; else savedGameThumbnails[game.key] = previousThumbnail; status.textContent = "Not enough browser storage to save this image link."; return; }
         applySavedGameThumbnails();
-        status.textContent = "Thumbnail image link saved for " + game.title + ".";
-        refreshThumbnailSelector();
+        status.textContent = "Saving thumbnail link to shared database…";
+        saveSharedStateNow().then(() => {
+          status.textContent = "Thumbnail image link published for " + game.title + ".";
+          refreshThumbnailSelector();
+        }).catch(error => {
+          if (previousThumbnail === undefined) delete savedGameThumbnails[game.key]; else savedGameThumbnails[game.key] = previousThumbnail;
+          localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+          const card = findGameCard(game.key);
+          const addedImage = card && card.querySelector('img[data-custom-thumbnail="true"]');
+          if (addedImage) addedImage.remove();
+          status.textContent = "Thumbnail saved only in this browser — shared save failed: " + error.message;
+          refreshThumbnailSelector();
+        });
       };
       probe.onerror = () => { status.textContent = "Could not load that image. Drag the actual image from Google Images, not the page or thumbnail link."; };
       probe.src = parsed.href;
