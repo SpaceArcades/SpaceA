@@ -1256,7 +1256,19 @@
       .managed-game-row { flex-wrap:wrap; }
     }
 
-</style>
+
+    .site-stats {
+      display:flex; justify-content:center; gap:18px; flex-wrap:wrap;
+      margin:14px auto 0; padding:10px 16px; width:fit-content;
+      border:1px solid var(--panel-border); border-radius:999px;
+      background:var(--panel); color:var(--muted); font-size:.82rem;
+      backdrop-filter:blur(10px);
+    }
+    .site-stats strong { color:var(--text); font-variant-numeric:tabular-nums; }
+    .site-stats .online-dot { display:inline-block; width:7px; height:7px; margin-right:6px;
+      border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e; }
+
+  </style>
 
 </head>
 
@@ -1301,6 +1313,11 @@
       </div>
 
     </header>
+
+    <div class="site-stats" id="siteStats" aria-live="polite">
+      <span><span class="online-dot"></span><strong id="onlineCount">—</strong> online now</span>
+      <span><strong id="totalViews">—</strong> total views</span>
+    </div>
 
     <main>
 
@@ -3312,6 +3329,37 @@
       })
       .finally(() => { loadSharedState(); });
 
+
+
+    // Lightweight shared visitor counter for both hosted versions.
+    (function startSiteStats() {
+      const statsUrl = "https://space-gules-three.vercel.app/api/stats";
+      let visitorId = localStorage.getItem("spacearcades_visitor_id");
+      if (!visitorId) {
+        visitorId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
+          ("v-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
+        localStorage.setItem("spacearcades_visitor_id", visitorId);
+      }
+      const firstView = !sessionStorage.getItem("spacearcades_view_counted");
+      if (firstView) sessionStorage.setItem("spacearcades_view_counted", "1");
+      async function updateStats(countView) {
+        try {
+          const response = await fetch(statsUrl, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ visitorId, countView })
+          });
+          if (!response.ok) throw new Error("Stats unavailable");
+          const stats = await response.json();
+          document.getElementById("onlineCount").textContent = Number(stats.online || 0).toLocaleString();
+          document.getElementById("totalViews").textContent = Number(stats.totalViews || 0).toLocaleString();
+        } catch (error) { console.warn("SpaceArcades stats unavailable:", error); }
+      }
+      updateStats(firstView);
+      window.setInterval(() => updateStats(false), 30000);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) updateStats(false);
+      });
+    })();
 
     selectApp("magma");
 
