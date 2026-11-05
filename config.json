@@ -1,87 +1,159 @@
 {
-  "site": "SpaceArcades",
-  "games": [
-    {
-      "id": "pokemonTcg",
-      "title": "Pokémon TCG (TCG One)",
-      "url": "https://tcg.one/play"
-    },
-    {
-      "id": "kapi",
-      "title": "Friday Night Funkin' vs Kapi",
-      "url": "https://fridaynightfunkin2.io/friday-night-funkin-vs-kapi-v2"
-    },
-    {
-      "id": "onePiecePacks",
-      "title": "One Piece Pack Simulator",
-      "url": "https://onepiecepacksimulator.com/"
-    }
-  ],
-  "accessTabs": {
-    "admin": {
-      "label": "✦ Admin",
-      "code": "070814",
-      "permissions": [
-        "add-games"
-      ],
-      "glow": "purple",
-      "canRelinquishAccess": true
-    },
-    "coOwner": {
-      "label": "✦ Co-Owner",
-      "code": "0708",
-      "permissions": [
-        "add-games",
-        "remove-games",
-        "restore-games"
-      ],
-      "glow": "orange",
-      "canRelinquishAccess": true
-    },
-    "owner": {
-      "label": "✦ Owner",
-      "code": "1605",
-      "permissions": [
-        "add-games",
-        "remove-games",
-        "restore-games"
-      ],
-      "glow": "gold",
-      "canRelinquishAccess": true
-    },
-    "accessStorageBehavior": "Persist unlocked role across reloads until user removes access"
-  },
-  "keycodeButton": {
-    "label": "KEYCODE",
-    "placement": "spacearcades-page",
-    "modal": {
-      "style": "black",
-      "outline": "white",
-      "animation": "drop-down-and-slide-up",
-      "blurBackground": true,
-      "showHeading": false,
-      "showInstructions": false
-    },
-    "successColor": "green",
-    "errorColor": "red"
+  "site": {
+    "name": "SpaceArcades",
+    "version": "2.0",
+    "theme": "dark"
   },
   "storage": {
-    "accessMode": "spaceArcadesAccessModeV1",
-    "customGames": "spaceArcadesCustomGamesV1",
-    "deletedGames": "spaceArcadesDeletedGamesV1",
-    "removedCustomGames": "spaceArcadesRemovedCustomGamesV1"
+    "format": "json",
+    "activeGamesCollection": "games.activeGames",
+    "deletedGamesCollection": "games.deletedGames",
+    "thumbnailDirectory": "thumbnails/",
+    "sharedAcrossVisitors": true,
+    "requiresServerApiForWrites": true
   },
-  "preserveExistingGamesAndThumbnails": true,
-  "thumbnailPolicy": {
-    "autoFetch": false,
-    "useWebsiteFavicons": false,
-    "userCreatesThumbnails": true
+  "features": {
+    "addGames": true,
+    "deleteGames": true,
+    "restoreGames": true,
+    "permanentlyDeleteGames": true,
+    "uploadThumbnails": true,
+    "confirmBeforeDelete": true,
+    "preserveThumbnailInRecycleBin": true
   },
-  "navigation": {
-    "defaultTab": "quickLaunch",
-    "quickLaunchLabel": "Quick Launch",
-    "persistShortcutNames": true,
-    "shortcutNamesStorageKey": "spaceArcadesShortcutNamesV1"
+  "roles": {
+    "admin": {
+      "color": "purple",
+      "permissions": ["add-games"]
+    },
+    "coOwner": {
+      "color": "orange",
+      "permissions": ["add-games", "remove-games", "restore-games"]
+    },
+    "owner": {
+      "color": "gold",
+      "permissions": [
+        "add-games",
+        "remove-games",
+        "restore-games",
+        "permanently-delete-games",
+        "manage-roles"
+      ]
+    }
   },
-  "securityNote": "Access codes are client-side and can be found by inspecting page source or browser developer tools; do not use for sensitive security."
+  "games": {
+    "activeGames": [
+      {
+        "id": "slope",
+        "title": "Slope",
+        "url": "https://slopesunblocked.io/",
+        "thumbnail": "slope.png",
+        "type": "built-in"
+      },
+      {
+        "id": "spaceWaves",
+        "title": "Space Waves",
+        "url": "https://www.crazygames.com/embed/space-waves",
+        "thumbnail": "sp.png",
+        "type": "built-in"
+      },
+      {
+        "id": "minecraft",
+        "title": "Minecraft",
+        "url": "https://eaglercraft.dev/clients/Vanilla%201.12.2%20JS/index.html",
+        "thumbnail": "mc.png",
+        "type": "built-in"
+      },
+      {
+        "id": "granny",
+        "title": "Granny",
+        "url": "https://grannyonline.io/",
+        "thumbnail": "granny.png",
+        "type": "built-in"
+      },
+      {
+        "id": "fnaf3",
+        "title": "FNAF 3",
+        "url": "https://fnaf1.io/fnaf-3",
+        "thumbnail": "fnaf3.png",
+        "type": "built-in"
+      },
+      {
+        "id": "fnaf1",
+        "title": "FNAF 1",
+        "url": "https://fnaf1.io/",
+        "thumbnail": "fnaf1.png",
+        "type": "built-in"
+      },
+      {
+        "id": "fnaf2",
+        "title": "FNAF 2",
+        "url": "https://fnaf1.io/fnaf-2",
+        "thumbnail": "fnaf2.png",
+        "type": "built-in"
+      },
+      {
+        "id": "baldi",
+        "title": "Baldi's Basics",
+        "url": "https://www.miniplay.com/embed/baldis-basics-in-education-and-learning",
+        "thumbnail": "b.png",
+        "type": "built-in"
+      },
+      {
+        "id": "mario",
+        "title": "Super Mario",
+        "url": "https://www.miniplay.com/embed/super-mario-html5",
+        "thumbnail": "mario.png",
+        "type": "built-in"
+      },
+      {
+        "id": "sonicCD",
+        "title": "Sonic CD",
+        "url": "https://www.retrogames.cc/embed/45295-sonic-cd-edition.html",
+        "thumbnail": "son.png",
+        "type": "built-in"
+      },
+      {
+        "id": "deltarune",
+        "title": "DELTARUNE Battle Simulator",
+        "url": "https://scratch.mit.edu/projects/613803664/embed",
+        "thumbnail": "delt.png",
+        "type": "built-in"
+      },
+      {
+        "id": "kapi",
+        "title": "Friday Night Funkin' vs Kapi",
+        "url": "https://fridaynightfunkin2.io/friday-night-funkin-vs-kapi-v2",
+        "thumbnail": "",
+        "type": "configured"
+      },
+      {
+        "id": "pokemonTcg",
+        "title": "Pokémon TCG (TCG One)",
+        "url": "https://tcg.one/play",
+        "thumbnail": "",
+        "type": "configured"
+      },
+      {
+        "id": "onePiecePacks",
+        "title": "One Piece Pack Simulator",
+        "url": "https://onepiecepacksimulator.com/",
+        "thumbnail": "",
+        "type": "configured"
+      }
+    ],
+    "deletedGames": []
+  },
+  "thumbnailSettings": {
+    "allowedTypes": ["image/png", "image/jpeg", "image/webp", "image/gif"],
+    "maxFileSizeMB": 5,
+    "storeWithGame": true
+  },
+  "deleteSettings": {
+    "moveToRecycleBin": true,
+    "preserveGameDetails": true,
+    "preserveThumbnail": true,
+    "requireConfirmation": true,
+    "permanentDeleteRequiresOwner": true
+  }
 }
