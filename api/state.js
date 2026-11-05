@@ -1,8 +1,11 @@
-import { list, put } from "@vercel/blob";
+import { neon } from "@neondatabase/serverless";
 import { timingSafeEqual } from "node:crypto";
 
-const DATA_PATH = "spacearcades/shared-state.json";
 const EMPTY = { customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {} };
+const sql = () => {
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not configured");
+  return neon(process.env.DATABASE_URL);
+};
 
 function safeEqual(a, b) {
   const aa = Buffer.from(String(a || ""));
@@ -17,12 +20,9 @@ function authorized(role, code) {
 }
 
 async function readState() {
-  const found = await list({ prefix: DATA_PATH, limit: 1 });
-  const blob = found.blobs?.find(item => item.pathname === DATA_PATH);
-  if (!blob) return { initialized: false, state: EMPTY };
-  const response = await fetch(blob.url, { cache: "no-store" });
-  if (!response.ok) throw new Error("Could not read shared JSON data");
-  return { initialized: true, state: await response.json() };
+  const rows = await sql()`SELECT state FROM shared_state WHERE id = 1 LIMIT 1`;
+  if (!rows.length) return { initialized: false, state: EMPTY };
+  return { initialized: true, state: rows[0].state };
 }
 
 export default async function handler(req, res) {
@@ -39,9 +39,13 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cache-Control", "no-store, max-age=0");
   if (req.method === "OPTIONS") return res.status(204).end();
+
   if (req.method === "GET") {
     try { return res.status(200).json(await readState()); }
-    catch (error) { return res.status(500).json({ error: "Shared data unavailable", detail: error.message }); }
+    catch (error) {
+      console.error("SpaceArcades database read error:", error);
+      return res.status(500).json({ error: "Shared database unavailable" });
+    }
   }
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -52,31 +56,37 @@ export default async function handler(req, res) {
     if (!state || !Array.isArray(state.customGames) || !Array.isArray(state.deletedGameIds)) {
       return res.status(400).json({ error: "Invalid game data" });
     }
+
     if (role === "admin") {
-      // Admins may add games, but cannot change deletion or restore lists.
       const current = await readState();
-      const incoming = state || {};
       state.deletedGameIds = current.state.deletedGameIds || [];
       state.removedCustomGames = current.state.removedCustomGames || {};
-      state.thumbnails = { ...(current.state.thumbnails || {}), ...(incoming.thumbnails || {}) };
+      state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
       const oldIds = new Set((current.state.customGames || []).map(g => g.id));
-      const newIds = new Set((incoming.customGames || []).map(g => g.id));
-      if ([...(oldIds)].some(id => !newIds.has(id))) return res.status(403).json({ error: "Admins cannot remove games" });
+      const newIds = new Set(state.customGames.map(g => g.id));
+      if ([...oldIds].some(id => !newIds.has(id))) {
+        return res.status(403).json({ error: "Admins cannot remove games" });
+      }
     }
-    if (JSON.stringify(state).length > 4_000_000) return res.status(413).json({ error: "Data is too large. Use smaller thumbnails." });
+
+    if (JSON.stringify(state).length > 4_000_000) {
+      return res.status(413).json({ error: "Data is too large. Use smaller thumbnails." });
+    }
     const clean = {
       customGames: state.customGames.filter(g => g && typeof g.id === "string" && typeof g.title === "string" && typeof g.url === "string"),
       deletedGameIds: [...new Set(state.deletedGameIds.filter(id => typeof id === "string"))],
       removedCustomGames: state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {},
       thumbnails: state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {}
     };
-    await put(DATA_PATH, JSON.stringify(clean, null, 2), {
-      access: "public", addRandomSuffix: false, allowOverwrite: true,
-      contentType: "application/json; charset=utf-8", cacheControlMaxAge: 0
-    });
+    await sql()`
+      INSERT INTO shared_state (id, state, updated_at)
+      VALUES (1, ${JSON.stringify(clean)}::jsonb, NOW())
+      ON CONFLICT (id) DO UPDATE
+      SET state = EXCLUDED.state, updated_at = NOW()
+    `;
     return res.status(200).json({ ok: true });
   } catch (error) {
-    console.error("SpaceArcades state API error:", error);
-    return res.status(500).json({ error: "Could not save shared data", detail: error.message });
+    console.error("SpaceArcades database save error:", error);
+    return res.status(500).json({ error: "Could not save shared data" });
   }
 }
