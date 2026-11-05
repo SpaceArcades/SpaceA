@@ -2503,6 +2503,7 @@
     });
 
     /* GAME CATALOGUE + ADMIN / OWNER ACCESS */
+    const SHARED_API_URL = "https://space-gules-three.vercel.app/api/state";
     const SHARED_CODE_KEY = "spaceArcadesSharedWriteCodeV1";
     let sharedDataReady = false;
     let sharedSaveTimer = null;
@@ -2663,7 +2664,7 @@
       clearTimeout(sharedSaveTimer);
       sharedSaveTimer = setTimeout(async () => {
         try {
-          const response = await fetch("/api/state", {
+          const response = await fetch(SHARED_API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "save", role, code, state: sharedSnapshot() })
@@ -2678,7 +2679,7 @@
 
     async function loadSharedState() {
       try {
-        const response = await fetch("/api/state", { cache: "no-store" });
+        const response = await fetch(SHARED_API_URL, { cache: "no-store" });
         if (!response.ok) throw new Error("Shared data could not be loaded");
         const result = await response.json();
         if (!result.initialized || !result.state) { sharedDataReady = true; return; }
