@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { timingSafeEqual } from "node:crypto";
 
-const EMPTY = { customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {} };
+const EMPTY = { customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {}, gameLinks: {} };
 const sql = () => {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not configured");
   return neon(process.env.DATABASE_URL);
@@ -65,6 +65,7 @@ export default async function handler(req, res) {
       state.deletedGameIds = current.state.deletedGameIds || [];
       state.removedCustomGames = current.state.removedCustomGames || {};
       state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
+      state.gameLinks = current.state.gameLinks || {};
       const oldIds = new Set((current.state.customGames || []).map(g => g.id));
       const newIds = new Set(state.customGames.map(g => g.id));
       if ([...oldIds].some(id => !newIds.has(id))) {
@@ -79,7 +80,8 @@ export default async function handler(req, res) {
       customGames: state.customGames.filter(g => g && typeof g.id === "string" && typeof g.title === "string" && typeof g.url === "string"),
       deletedGameIds: [...new Set(state.deletedGameIds.filter(id => typeof id === "string"))],
       removedCustomGames: state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {},
-      thumbnails: state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {}
+      thumbnails: state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {},
+      gameLinks: role === "admin" ? (state.gameLinks || {}) : (state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {})
     };
     await sql()`
       INSERT INTO shared_state (id, state, updated_at)
