@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@vercel/blob": "^2.0.0"
+    "@neondatabase/serverless": "^1.0.2"
   }
 }
