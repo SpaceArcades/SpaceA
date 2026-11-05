@@ -2513,6 +2513,7 @@
     let sharedDataReady = false;
     let sharedSaveTimer = null;
     let removedCustomGames = {};
+    let sharedGameLinks = {};
     const CUSTOM_GAMES_KEY = "spaceArcadesCustomGamesV1";
     const customGames = loadCustomGames();
     const ACCESS_MODE_KEY = "spaceArcadesAccessModeV1";
@@ -2547,8 +2548,8 @@
 
     function allGameEntries() {
       return [
-        ...Object.entries(games).map(([key, game]) => ({ key, ...game, custom: false })),
-        ...customGames.map(game => ({ key: game.id, ...game, custom: true }))
+        ...Object.entries(games).map(([key, game]) => ({ key, ...game, url: sharedGameLinks[key] || game.url, custom: false })),
+        ...customGames.map(game => ({ key: game.id, ...game, url: sharedGameLinks[game.id] || game.url, custom: true }))
       ];
     }
 
@@ -2657,7 +2658,8 @@
         customGames,
         deletedGameIds: [...deletedGameIds],
         removedCustomGames,
-        thumbnails: savedGameThumbnails || {}
+        thumbnails: savedGameThumbnails || {},
+        gameLinks: sharedGameLinks || {}
       };
     }
 
@@ -2690,13 +2692,14 @@
         if (!response.ok) throw new Error("Shared data could not be loaded");
         const result = await response.json();
         const state = result && result.state ? result.state : {
-          customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {}
+          customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {}, gameLinks: {}
         };
         customGames.splice(0, customGames.length, ...(Array.isArray(state.customGames) ? state.customGames : []));
         deletedGameIds.clear();
         (Array.isArray(state.deletedGameIds) ? state.deletedGameIds : []).forEach(id => deletedGameIds.add(id));
         removedCustomGames = state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {};
         savedGameThumbnails = state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {};
+        sharedGameLinks = state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {};
         localStorage.setItem(CUSTOM_GAMES_KEY, JSON.stringify(customGames));
         localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
         localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedCustomGames));
@@ -2811,6 +2814,37 @@
         row.appendChild(name);
 
         if (hasGameManagementAccess()) {
+          const editLink = document.createElement("button");
+          editLink.type = "button";
+          editLink.className = "primary-btn";
+          editLink.textContent = "Change link";
+          editLink.addEventListener("click", async () => {
+            const entered = prompt("Enter the new game URL for " + game.title + ":", game.url || "");
+            if (entered === null) return;
+            const newUrl = safeGameUrl(entered);
+            if (!newUrl) { alert("Please enter a valid http:// or https:// link."); return; }
+            const oldUrl = sharedGameLinks[game.key] || game.url;
+            const customItem = customGames.find(item => item.id === game.key);
+            const oldCustomUrl = customItem && customItem.url;
+            sharedGameLinks[game.key] = newUrl;
+            if (customItem) customItem.url = newUrl;
+            if (customItem) saveCustomGames();
+            try {
+              await saveSharedStateNow();
+              renderManagedGames();
+              renderGameCatalog();
+              if (currentGameKey === game.key) openGame(game.key);
+              alert("Game link updated and published on both websites.");
+            } catch (error) {
+              if (oldUrl) sharedGameLinks[game.key] = oldUrl;
+              else delete sharedGameLinks[game.key];
+              if (customItem && oldCustomUrl) customItem.url = oldCustomUrl;
+              if (customItem) saveCustomGames();
+              alert("Could not save the new link: " + error.message);
+            }
+          });
+          row.appendChild(editLink);
+
           const remove = document.createElement("button");
           remove.type = "button";
           remove.className = "delete-game-btn";
