@@ -2603,6 +2603,21 @@
 
     const DELETED_GAMES_KEY = "spaceArcadesDeletedGamesV1";
     const deletedGameIds = new Set(JSON.parse(localStorage.getItem(DELETED_GAMES_KEY) || "[]"));
+
+    // ONE-TIME CLEANUP: remove games manually added by visitors in older versions.
+    // The migration flag prevents this from deleting games added after this update.
+    const CUSTOM_GAMES_CLEANUP_KEY = "spaceArcadesCustomGamesCleanupV1";
+    if (localStorage.getItem(CUSTOM_GAMES_CLEANUP_KEY) !== "done") {
+      customGames.splice(0, customGames.length);
+      saveCustomGames();
+      localStorage.removeItem("spaceArcadesRemovedCustomGamesV1");
+
+      for (const id of [...deletedGameIds]) {
+        if (String(id).startsWith("custom-")) deletedGameIds.delete(id);
+      }
+      saveDeletedGames();
+      localStorage.setItem(CUSTOM_GAMES_CLEANUP_KEY, "done");
+    }
     const configuredGames = [
       {
         id: "pokemonTcg",
