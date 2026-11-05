@@ -1716,6 +1716,11 @@
             <input id="thumbnailFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
           </div>
           <div class="translator-actions" style="margin-top:12px"><button class="primary-btn" id="saveGameThumbnailBtn" type="button">Save thumbnail</button><span class="status" id="thumbnailStatus" role="status" aria-live="polite"></span></div>
+          <div id="removeThumbnailControls" class="translator-actions hidden" style="margin-top:14px">
+            <label class="field-label" for="removeThumbnailGameSelect" style="margin:0">Remove a saved thumbnail</label>
+            <select id="removeThumbnailGameSelect" style="min-width:220px;padding:10px;border-radius:8px;background:var(--panel);color:var(--text);border:1px solid var(--panel-border)"><option value="">No saved thumbnails</option></select>
+            <button class="primary-btn" id="removeGameThumbnailBtn" type="button">Remove thumbnail</button>
+          </div>
         </div>
         <div class="panel" style="margin-top:16px">
           <h3>Access settings</h3>
@@ -2907,11 +2912,28 @@
       const missing = allGameEntries().filter(game => !deletedGameIds.has(game.key) && !gameHasThumbnail(game));
       if (!missing.length) {
         select.add(new Option("All games already have thumbnails", ""));
-        return;
+      } else {
+        select.add(new Option("Select a game…", ""));
+        missing.forEach(game => select.add(new Option(game.title, game.key)));
+        if (missing.some(game => game.key === previous)) select.value = previous;
       }
-      select.add(new Option("Select a game…", ""));
-      missing.forEach(game => select.add(new Option(game.title, game.key)));
-      if (missing.some(game => game.key === previous)) select.value = previous;
+
+      const controls = document.getElementById("removeThumbnailControls");
+      const removeSelect = document.getElementById("removeThumbnailGameSelect");
+      if (!controls || !removeSelect) return;
+      controls.classList.toggle("hidden", !hasGameManagementAccess());
+      const previousRemove = removeSelect.value;
+      removeSelect.replaceChildren();
+      const saved = allGameEntries().filter(game => !deletedGameIds.has(game.key) && !!savedGameThumbnails[game.key]);
+      if (!saved.length) {
+        removeSelect.add(new Option("No saved thumbnails", ""));
+        document.getElementById("removeGameThumbnailBtn").disabled = true;
+      } else {
+        removeSelect.add(new Option("Select a thumbnail…", ""));
+        saved.forEach(game => removeSelect.add(new Option(game.title, game.key)));
+        if (saved.some(game => game.key === previousRemove)) removeSelect.value = previousRemove;
+        document.getElementById("removeGameThumbnailBtn").disabled = false;
+      }
     }
     function applySavedGameThumbnails() {
       Object.entries(savedGameThumbnails).forEach(([key, src]) => {
@@ -2968,6 +2990,33 @@
     document.getElementById("saveGameThumbnailBtn").addEventListener("click", () => {
       const file = document.getElementById("thumbnailFileInput").files[0];
       saveMissingGameThumbnail(file);
+    });
+    document.getElementById("removeGameThumbnailBtn").addEventListener("click", async () => {
+      if (!hasGameManagementAccess()) return;
+      const key = document.getElementById("removeThumbnailGameSelect").value;
+      const status = document.getElementById("thumbnailStatus");
+      const game = allGameEntries().find(item => item.key === key);
+      if (!game || !savedGameThumbnails[key]) { status.textContent = "Select a saved thumbnail to remove."; return; }
+      if (!confirm("Remove the saved thumbnail for " + game.title + "?")) return;
+      const previous = savedGameThumbnails[key];
+      delete savedGameThumbnails[key];
+      try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
+      catch (error) { savedGameThumbnails[key] = previous; status.textContent = "Could not update local thumbnail data."; return; }
+      const card = findGameCard(key);
+      const image = card && card.querySelector('img[data-custom-thumbnail="true"]');
+      if (image) image.remove();
+      status.textContent = "Removing thumbnail from shared database…";
+      try {
+        await saveSharedStateNow();
+        status.textContent = "Thumbnail removed for " + game.title + " on both sites.";
+        refreshThumbnailSelector();
+      } catch (error) {
+        savedGameThumbnails[key] = previous;
+        localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+        applySavedGameThumbnails();
+        status.textContent = "Could not remove shared thumbnail: " + error.message;
+        refreshThumbnailSelector();
+      }
     });
     const thumbnailDropZone = document.getElementById("thumbnailDropZone");
     const thumbnailFileInput = document.getElementById("thumbnailFileInput");
