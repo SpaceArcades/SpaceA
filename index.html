@@ -2195,6 +2195,7 @@
 
       const game = games[gameKey] || configuredGames.find(item => item.id === gameKey) || customGames.find(item => item.id === gameKey);
       if (!game) { currentGameKey = null; return; }
+      if (sharedGameLinks[gameKey]) game.url = sharedGameLinks[gameKey];
 
       gamePlayerTitle.textContent = game.title;
       document.getElementById('gameOpenTabBtn').classList.remove('hidden');
