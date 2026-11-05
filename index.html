@@ -1200,9 +1200,14 @@
       color: #eadcff !important; border-color: #b78aff;
       box-shadow: 0 0 14px rgba(164,105,255,.65), 0 0 28px rgba(164,105,255,.3);
     }
-    #ownerTab.special-tab { color: #ffd76a !important; border-color: rgba(255,190,55,.65);
+    /* Co-Owner is orange; Owner remains gold. */
+    #ownerTab.special-tab { color: #ffad66 !important; border-color: rgba(255,145,55,.65);
+      text-shadow: 0 0 8px rgba(255,145,55,.85); box-shadow: 0 0 12px rgba(255,145,55,.25); }
+    #ownerTab.special-tab:hover, #ownerTab.special-tab.active { color:#ffe0c2 !important;
+      border-color:#ffad66; box-shadow:0 0 14px rgba(255,145,55,.7),0 0 28px rgba(255,145,55,.32); }
+    #superOwnerTab.special-tab { color: #ffd76a !important; border-color: rgba(255,190,55,.65);
       text-shadow: 0 0 8px rgba(255,190,55,.85); box-shadow: 0 0 12px rgba(255,190,55,.25); }
-    #ownerTab.special-tab:hover, #ownerTab.special-tab.active { color:#fff0b0 !important;
+    #superOwnerTab.special-tab:hover, #superOwnerTab.special-tab.active { color:#fff0b0 !important;
       border-color:#ffd76a; box-shadow:0 0 14px rgba(255,190,55,.7),0 0 28px rgba(255,190,55,.32); }
     #adminButton { position:fixed; right:18px; bottom:18px; z-index:1000; padding:10px 18px;
       border:1px solid rgba(255,255,255,.8); border-radius:999px; background:#050505; color:#fff;
@@ -1310,7 +1315,8 @@
             <button class="tab" id="calculatorTab" type="button" aria-selected="false">Calculator</button>
             <button class="tab" id="hangoutTab" type="button" aria-selected="false">Hangout <span class="sponsor-tag">SPONSOR</span></button>
             <button class="tab special-tab hidden" id="adminTab" type="button" aria-selected="false">✦ Admin</button>
-            <button class="tab special-tab hidden" id="ownerTab" type="button" aria-selected="false">✦ Owner</button>
+            <button class="tab special-tab hidden" id="ownerTab" type="button" aria-selected="false">✦ Co-Owner</button>
+            <button class="tab special-tab hidden" id="superOwnerTab" type="button" aria-selected="false">✦ Owner</button>
 
           </nav>
 
@@ -1680,7 +1686,7 @@
       <section id="managementSection" class="hidden">
         <div class="section-heading">
           <div>
-            <h2>Special Owner Panel</h2>
+            <h2>Special Access Panel</h2>
             <p class="sub">Add games and manage custom games in the arcade.</p>
           </div>
         </div>
@@ -1713,13 +1719,13 @@
         </div>
         <div class="panel" style="margin-top:16px">
           <h3>Access settings</h3>
-          <p>Remove your current Admin or Owner access from this browser. You can enter a keycode again whenever you need access.</p>
+          <p>Remove your current Admin, Co-Owner, or Owner access from this browser. You can enter a keycode again whenever you need access.</p>
           <button class="primary-btn" id="relinquishAccessBtn" type="button">Remove my access</button>
           <span class="status" id="relinquishStatus" role="status" aria-live="polite"></span>
         </div>
         <div class="panel" style="margin-top:16px">
           <h3>Custom games</h3>
-          <p>Games added here stay in this browser. Owner access can remove custom games.</p>
+          <p>Games added here stay in this browser. Co-Owner and Owner access can remove custom games.</p>
           <div id="managedGamesList" class="games-catalog"></div>
         </div>
       </section>
@@ -2121,7 +2127,8 @@
         calculator: { panel: "calculatorSection", tab: "calculatorTab" },
         hangout: { panel: "hangoutSection", tab: "hangoutTab" },
         admin: { panel: "managementSection", tab: "adminTab" },
-        owner: { panel: "managementSection", tab: "ownerTab" }
+        coowner: { panel: "managementSection", tab: "ownerTab" },
+        owner: { panel: "managementSection", tab: "superOwnerTab" }
       };
       Object.values(sections).forEach(item => {
         const tab = document.getElementById(item.tab);
@@ -2155,6 +2162,9 @@
       if (accessMode === "admin") showSection("admin");
     });
     document.getElementById("ownerTab").addEventListener("click", () => {
+      if (accessMode === "coowner") showSection("coowner");
+    });
+    document.getElementById("superOwnerTab").addEventListener("click", () => {
       if (accessMode === "owner") showSection("owner");
     });
 
@@ -2497,7 +2507,8 @@
     const customGames = loadCustomGames();
     const ACCESS_MODE_KEY = "spaceArcadesAccessModeV1";
     let accessMode = localStorage.getItem(ACCESS_MODE_KEY);
-    if (accessMode !== "admin" && accessMode !== "owner") accessMode = null;
+    if (!["admin", "coowner", "owner"].includes(accessMode)) accessMode = null;
+    const hasGameManagementAccess = () => accessMode === "coowner" || accessMode === "owner";
 
     function loadCustomGames() {
       try {
@@ -2691,7 +2702,7 @@
         }
         row.appendChild(name);
 
-        if (accessMode === "owner") {
+        if (hasGameManagementAccess()) {
           const remove = document.createElement("button");
           remove.type = "button";
           remove.className = "delete-game-btn";
@@ -2720,7 +2731,7 @@
         list.appendChild(row);
       });
 
-      if (accessMode === "owner") {
+      if (hasGameManagementAccess()) {
         const restoreHeading = document.createElement("h4");
         restoreHeading.textContent = "Removed games — restore";
         restoreHeading.style.marginTop = "18px";
@@ -2905,11 +2916,12 @@
 
     function openAccessPanel(mode) {
       accessMode = mode;
+      const fullAccess = mode === "owner" || mode === "coowner";
       document.getElementById("accessPanelTitle").textContent =
-        mode === "owner" ? "Owner Panel" : "Admin Panel";
+        mode === "owner" ? "Owner Panel" : mode === "coowner" ? "Co-Owner Panel" : "Admin Panel";
       document.getElementById("accessPanelDescription").textContent =
-        mode === "owner"
-          ? "Owner access: add games, remove games, and restore removed games. Your Owner access stays active after reloading."
+        fullAccess
+          ? `${mode === "owner" ? "Owner" : "Co-Owner"} access: add games, remove games, and restore removed games. Access stays active after reloading.`
           : "Admin access: add games. Add your own thumbnail image files to the website folder yourself.";
       renderManagedGames();
       applySavedGameThumbnails();
@@ -2946,22 +2958,30 @@
     keycodeInput.addEventListener("keydown", event => {
       if (event.key === "Enter") {
         const code = keycodeInput.value.trim();
-        if (accessMode === "owner" && code === "070814") {
-          showKeycodeFeedback("BETTER KEY ALREADY ACTIVE", "error");
-        } else if (code === "070814") {
+        if (code === "070814") {
           accessMode = "admin";
           localStorage.setItem(ACCESS_MODE_KEY, accessMode);
           document.getElementById("adminTab").classList.remove("hidden");
           document.getElementById("ownerTab").classList.add("hidden");
+          document.getElementById("superOwnerTab").classList.add("hidden");
           openAccessPanel("admin");
           showKeycodeFeedback("ACCESS GRANTED", "success");
         } else if (code === "0708") {
-          accessMode = "owner";
+          accessMode = "coowner";
           localStorage.setItem(ACCESS_MODE_KEY, accessMode);
           document.getElementById("ownerTab").classList.remove("hidden");
+          document.getElementById("superOwnerTab").classList.add("hidden");
+          document.getElementById("adminTab").classList.add("hidden");
+          openAccessPanel("coowner");
+          showKeycodeFeedback("CO-OWNER ACCESS GRANTED", "success");
+        } else if (code === "1605") {
+          accessMode = "owner";
+          localStorage.setItem(ACCESS_MODE_KEY, accessMode);
+          document.getElementById("superOwnerTab").classList.remove("hidden");
+          document.getElementById("ownerTab").classList.add("hidden");
           document.getElementById("adminTab").classList.add("hidden");
           openAccessPanel("owner");
-          showKeycodeFeedback("ACCESS GRANTED", "success");
+          showKeycodeFeedback("OWNER ACCESS GRANTED", "success");
         } else {
           showKeycodeFeedback("INCORRECT KEYCODE", "error");
           keycodeInput.value = "";
@@ -2972,21 +2992,28 @@
     document.getElementById("relinquishAccessBtn").addEventListener("click", () => {
       const oldMode = accessMode;
       if (!oldMode) return;
-      const roleName = oldMode === "owner" ? "Owner" : "Admin";
+      const roleName = oldMode === "owner" ? "Owner" : oldMode === "coowner" ? "Co-Owner" : "Admin";
       if (!confirm(`Remove your ${roleName} access on this browser?`)) return;
       accessMode = null;
       localStorage.removeItem(ACCESS_MODE_KEY);
       document.getElementById("adminTab").classList.add("hidden");
       document.getElementById("ownerTab").classList.add("hidden");
+      document.getElementById("superOwnerTab").classList.add("hidden");
       document.getElementById("relinquishStatus").textContent = `${roleName} access removed.`;
       showSection("edit");
     });
 
     // Keep access unlocked after reload, but always start on Quick Launch.
     if (accessMode === "owner") {
-      document.getElementById("ownerTab").classList.remove("hidden");
+      document.getElementById("superOwnerTab").classList.remove("hidden");
+      document.getElementById("ownerTab").classList.add("hidden");
       document.getElementById("adminTab").classList.add("hidden");
       openAccessPanel("owner");
+    } else if (accessMode === "coowner") {
+      document.getElementById("ownerTab").classList.remove("hidden");
+      document.getElementById("superOwnerTab").classList.add("hidden");
+      document.getElementById("adminTab").classList.add("hidden");
+      openAccessPanel("coowner");
     } else if (accessMode === "admin") {
       document.getElementById("adminTab").classList.remove("hidden");
       openAccessPanel("admin");
@@ -3070,5 +3097,4 @@
 </body>
 
 </html>
-
 
