@@ -2684,10 +2684,12 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     }
 
     function allGameEntries() {
-      return [
+      const entries = [
         ...Object.entries(games).map(([key, game]) => ({ key, ...game, url: sharedGameLinks[key] || game.url, custom: false })),
+        ...configuredGames.map(game => ({ key: game.id, ...game, url: sharedGameLinks[game.id] || game.url, custom: false })),
         ...customGames.map(game => ({ key: game.id, ...game, url: sharedGameLinks[game.id] || game.url, custom: true }))
       ];
+      return entries.filter((game, index, list) => list.findIndex(item => item.key === game.key) === index);
     }
 
     function renderGameCatalog() {
@@ -3163,8 +3165,12 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     window.SpaceArcadesAIAction = function(action, gameName) {
       if (action !== "add_thumbnail") return { ok: false, message: "I can only help add a missing thumbnail right now." };
       if (!hasGameManagementAccess()) return { ok: false, message: "Owner or Co-Owner access is needed to add thumbnails." };
-      const wanted = String(gameName || "").trim().toLowerCase();
-      const game = allGameEntries().find(item => item.title.toLowerCase() === wanted || item.key.toLowerCase() === wanted);
+      const wanted = String(gameName || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+      const game = allGameEntries().find(item =>
+        [item.title, item.key, item.id].some(value =>
+          String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "") === wanted
+        )
+      );
       if (!game) return { ok: false, message: "I couldn't find that game. Check its exact name in the game list." };
       if (gameHasThumbnail(game)) return { ok: false, message: game.title + " already has a thumbnail, so I won't replace it." };
       openAccessPanel(accessMode);
