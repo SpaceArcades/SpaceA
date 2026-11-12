@@ -93,11 +93,26 @@ export default async function handler(req, res) {
         modelTried: modelUsed
       });
     }
-    const reply = data?.choices?.[0]?.message?.content;
-    if (typeof reply !== "string" || !reply.trim()) {
-      return res.status(502).json({ error: "The AI returned an empty response. Try again." });
+    const readReply = (payload) => {
+      const content = payload?.choices?.[0]?.message?.content;
+      if (typeof content === "string") return content.trim();
+      if (Array.isArray(content)) {
+        return content.map(part => typeof part === "string" ? part : part?.text || "").join("").trim();
+      }
+      return "";
+    };
+    let reply = readReply(data);
+    if (!reply && modelUsed !== "openrouter/free") {
+      const retry = await askOpenRouter("openrouter/free");
+      if (retry.response.ok) {
+        const retryReply = readReply(retry.data);
+        if (retryReply) reply = retryReply;
+      }
     }
-    return res.status(200).json({ reply: reply.trim() });
+    if (!reply) {
+      return res.status(502).json({ error: "The AI returned an empty response. Please send that again." });
+    }
+    return res.status(200).json({ reply });
   } catch (error) {
     console.error("Space AI request failed:", error);
     return res.status(500).json({ error: "Space AI had a server error. Please try again." });
