@@ -58,8 +58,17 @@ export default async function handler(req, res) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      console.error("OpenRouter error:", response.status, data?.error?.message || "Unknown error");
-      return res.status(502).json({ error: "The AI provider could not answer. Check the model ID, API key and OpenRouter limits." });
+      const providerMessage = String(data?.error?.message || data?.message || "No explanation was returned.")
+        .replace(/Bearer\\s+\\S+/gi, "Bearer [hidden]")
+        .replace(/sk-or-v1-[a-zA-Z0-9_-]+/g, "[hidden key]")
+        .slice(0, 500);
+      console.error("OpenRouter error:", response.status, providerMessage);
+      return res.status(502).json({
+        error: "OpenRouter returned an error.",
+        providerStatus: response.status,
+        providerMessage,
+        modelTried: model
+      });
     }
     const reply = data?.choices?.[0]?.message?.content;
     if (typeof reply !== "string" || !reply.trim()) {
