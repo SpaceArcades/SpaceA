@@ -3434,7 +3434,14 @@
      history.push({role:"assistant",content:reply});
    }catch(error){
      pending.remove();
-     addMessage(error.message||"Space AI is temporarily unavailable. Please try again.","bot");
+     let diagnostic = error && error.message ? error.message : "Unknown browser error";
+     if (error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(diagnostic)) {
+       diagnostic = "The browser could not reach the Space AI server. This is usually a CORS, network, or Vercel deployment issue.\nAPI: https://space-gules-three.vercel.app/api/chat\nWebsite origin: " + window.location.origin + "\nCheck that this exact website origin is allowed in api/chat.js and that the latest Vercel deployment is Ready.";
+     } else {
+       diagnostic = "Space AI server response: " + diagnostic;
+     }
+     addMessage("⚠️ " + diagnostic,"bot");
+     console.error("Space AI diagnostic:", error, "Website origin:", window.location.origin);
    }finally{
      send.disabled=false;send.textContent="Send";input.focus();
    }
