@@ -3533,7 +3533,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    if(!text||send.disabled)return;
    input.value="";
    addMessage(text,"user");
-   const thumbnailRequest = text.match(/(?:add|set|upload|change)\\s+(?:a\\s+)?(?:game\\s+)?thumbnail\\s+(?:for\\s+)?(.+)/i);
+   const thumbnailRequest = text.match(/(?:add|set|upload|change)\s+(?:a\s+)?(?:game\s+)?thumbnail\s+(?:for\s+)?(.+)/i);
    if (thumbnailRequest && window.SpaceArcadesAIAction) {
      const actionResult = window.SpaceArcadesAIAction("add_thumbnail", thumbnailRequest[1].replace(/[.!?]+$/, "").trim());
      addMessage(actionResult.message, "bot");
