@@ -1268,6 +1268,25 @@
     .site-stats .online-dot { display:inline-block; width:7px; height:7px; margin-right:6px;
       border-radius:50%; background:#22c55e; box-shadow:0 0 8px #22c55e; }
 #spaceAIFab{position:fixed;right:20px;bottom:22px;z-index:1200;display:flex;align-items:center;gap:10px;padding:11px 17px;border:1px solid rgba(104,190,255,.75);border-radius:999px;color:#eaf7ff;background:linear-gradient(135deg,#07152d,#11102c);font-weight:800;letter-spacing:.04em;cursor:pointer;box-shadow:0 0 18px rgba(56,150,255,.35);transition:.2s}#spaceAIFab:hover{transform:translateY(-3px);box-shadow:0 0 26px rgba(56,150,255,.65)}#spaceAIFab svg{width:25px;height:25px}#spaceAIPanel{position:fixed;right:20px;bottom:86px;z-index:1201;width:min(370px,calc(100vw - 24px));max-height:min(590px,78vh);display:none;flex-direction:column;overflow:hidden;border:1px solid rgba(104,190,255,.55);border-radius:18px;background:rgba(5,10,24,.97);color:#edf6ff;box-shadow:0 20px 65px rgba(0,0,0,.65),0 0 28px rgba(56,150,255,.18);backdrop-filter:blur(18px)}#spaceAIPanel.open{display:flex}#spaceAIPanel header{padding:13px 15px;border-bottom:1px solid rgba(150,195,255,.18);display:flex;align-items:center;justify-content:space-between}.space-ai-heading{display:flex;align-items:center;gap:9px;font-weight:900;color:#9bd7ff}.space-ai-heading svg{width:27px;height:27px}#spaceAIClose{color:#b9cce3;cursor:pointer;font-size:1.25rem;padding:2px 7px}#spaceAIIntro{padding:12px 14px 4px;color:#a9bfd8;font-size:.82rem}#spaceAIMessages{padding:12px 14px;overflow:auto;display:flex;flex-direction:column;gap:9px;min-height:130px}.space-ai-msg{max-width:92%;padding:9px 12px;border-radius:13px;font-size:.84rem;line-height:1.45;white-space:pre-wrap}.space-ai-msg.bot{align-self:flex-start;background:rgba(86,154,220,.15);border:1px solid rgba(120,180,255,.17)}.space-ai-msg.user{align-self:flex-end;background:#164b78;color:#fff}.space-ai-tools{padding:8px 13px 12px;display:flex;gap:7px;flex-wrap:wrap}.space-ai-tools button{border:1px solid rgba(125,190,255,.3);border-radius:999px;padding:7px 10px;color:#cbe8ff;background:rgba(40,100,160,.18);font-size:.76rem;cursor:pointer}.space-ai-tools button:hover{background:rgba(60,140,220,.32)}#spaceAIForm{display:flex;gap:7px;padding:11px;border-top:1px solid rgba(150,195,255,.18)}#spaceAIInput{flex:1;min-width:0;padding:10px 12px;border:1px solid rgba(125,190,255,.25);border-radius:10px;background:#0c1830;color:#fff;font-size:.85rem}#spaceAIForm button{padding:0 14px;border-radius:10px;background:#2469a4;color:white;font-weight:800;cursor:pointer}@media(max-width:600px){#spaceAIFab{right:12px;bottom:14px}#spaceAIPanel{right:12px;bottom:76px}}
+
+/* Space AI full chat */
+#spaceAIFab{position:fixed;right:22px;bottom:22px;z-index:1200}
+#spaceAIPanel{position:fixed;right:22px;bottom:86px;z-index:1201;width:min(720px,calc(100vw - 28px));height:min(760px,82vh);max-height:calc(100vh - 110px);display:none;flex-direction:column;overflow:hidden;border:1px solid rgba(104,190,255,.55);border-radius:22px;background:rgba(5,10,24,.98);color:#edf6ff;box-shadow:0 24px 90px rgba(0,0,0,.7),0 0 36px rgba(56,150,255,.2);backdrop-filter:blur(18px)}
+#spaceAIPanel.open{display:flex}
+#spaceAIPanel header{flex:0 0 auto;padding:17px 20px;border-bottom:1px solid rgba(150,195,255,.18);display:flex;align-items:center;justify-content:space-between}
+.space-ai-heading{font-size:1.05rem;font-weight:900;color:#9bd7ff}
+#spaceAIClose{color:#b9cce3;cursor:pointer;font-size:1.6rem;padding:2px 9px}
+#spaceAIIntro{padding:12px 20px 4px;color:#a9bfd8;font-size:.9rem}
+#spaceAIMessages{padding:18px 20px;overflow:auto;display:flex;flex:1;flex-direction:column;gap:13px;min-height:150px}
+.space-ai-msg{max-width:88%;padding:12px 15px;border-radius:15px;font-size:.96rem;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.space-ai-msg.bot{align-self:flex-start;background:rgba(86,154,220,.15);border:1px solid rgba(120,180,255,.17)}
+.space-ai-msg.user{align-self:flex-end;background:#164b78;color:#fff}
+#spaceAIForm{display:flex;gap:9px;padding:15px;border-top:1px solid rgba(150,195,255,.18);flex:0 0 auto}
+#spaceAIInput{flex:1;min-width:0;padding:13px 15px;border:1px solid rgba(125,190,255,.25);border-radius:13px;background:#0c1830;color:#fff;font-size:1rem}
+#spaceAIForm button{padding:0 22px;border-radius:13px;background:#2469a4;color:white;font-weight:800;cursor:pointer}
+#spaceAIForm button:disabled{opacity:.55;cursor:wait}
+@media(max-width:600px){#spaceAIFab{right:12px;bottom:14px}#spaceAIPanel{right:8px;bottom:72px;width:calc(100vw - 16px);height:78vh;max-height:calc(100vh - 90px)}#spaceAIMessages{padding:14px}}
+
 </style>
 
 </head>
@@ -3364,22 +3383,64 @@
 
   </script>
 
-<button id="spaceAIFab" type="button" aria-label="Open Space AI"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 3l4.8 13.2L42 21l-13.2 4.8L24 39l-4.8-13.2L6 21l13.2-4.8L24 3Z" stroke="#8bd5ff" stroke-width="2.2"/><circle cx="24" cy="21" r="4" fill="#d9f4ff"/></svg>SPACE AI</button><section id="spaceAIPanel" role="dialog" aria-label="Space AI logo and icon helper"><header><div class="space-ai-heading">✦ SPACE AI</div><button id="spaceAIClose" type="button" aria-label="Close">×</button></header><div id="spaceAIIntro">Your on-screen logo & icon helper. Try “make it purple” or “change the logo to a planet”.</div><div id="spaceAIMessages" aria-live="polite"><div class="space-ai-msg bot">Hey! I can change the SpaceArcades accent colour and the little space logo beside the site name. Changes save in this browser.</div></div><div class="space-ai-tools"><button type="button" data-spaceai="blue">Blue glow</button><button type="button" data-spaceai="purple">Purple glow</button><button type="button" data-spaceai="pink">Pink glow</button><button type="button" data-spaceai="gold">Gold glow</button><button type="button" data-spaceai="rocket">Rocket icon</button><button type="button" data-spaceai="planet">Planet icon</button><button type="button" data-spaceai="star">Star icon</button><button type="button" data-spaceai="reset">Reset</button></div><form id="spaceAIForm"><input id="spaceAIInput" type="text" placeholder="Tell Space AI what to change…" autocomplete="off"><button type="submit">Send</button></form></section>
+<button id="spaceAIFab" type="button" aria-label="Open Space AI">✦ SPACE AI</button>
+<section id="spaceAIPanel" role="dialog" aria-label="Space AI chat" aria-modal="false">
+  <header><div class="space-ai-heading">✦ SPACE AI <span style="font-size:.75rem;font-weight:500;color:#9fb5cf">· SpaceArcades assistant</span></div><button id="spaceAIClose" type="button" aria-label="Close">×</button></header>
+  <div id="spaceAIIntro">Ask me about games, the website, or anything else. I'm here to help!</div>
+  <div id="spaceAIMessages" aria-live="polite"><div class="space-ai-msg bot">Hey! I'm Space AI. What would you like to know?</div></div>
+  <form id="spaceAIForm"><input id="spaceAIInput" type="text" maxlength="4000" placeholder="Message Space AI…" autocomplete="off"><button id="spaceAISend" type="submit">Send</button></form>
+</section>
 <script>
 (function initSpaceAI(){
- const fab=document.getElementById("spaceAIFab"),panel=document.getElementById("spaceAIPanel"),messages=document.getElementById("spaceAIMessages"),brand=document.querySelector(".brand-link"),key="spaceArcadesSpaceAIStyleV1";
- if(!fab||!panel||!messages||!brand)return;
- const palettes={blue:["#78caff","rgba(85,175,255,.35)"],purple:["#c39aff","rgba(160,95,255,.38)"],pink:["#ff91c8","rgba(255,90,170,.35)"],gold:["#ffd76a","rgba(255,195,70,.35)"]};
- const icons={rocket:'<path d="M29 5c-8 2-14 8-17 17l10 10C31 29 37 23 39 15l-10-10Z" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M17 27l-7 7m14-3l-1 8-5-5" stroke="currentColor" stroke-width="2.5"/>',planet:'<circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2.5"/><ellipse cx="24" cy="24" rx="20" ry="7" transform="rotate(-25 24 24)" fill="none" stroke="currentColor" stroke-width="2.5"/>',star:'<path d="M24 4l5.8 13.2L44 23l-14.2 5.8L24 43l-5.8-14.2L4 23l14.2-5.8L24 4Z" fill="none" stroke="currentColor" stroke-width="2.5"/>'};
- let style={color:"blue",icon:"star"};try{style={...style,...JSON.parse(localStorage.getItem(key)||"{}")};}catch{}
- function apply(){const p=palettes[style.color]||palettes.blue;document.documentElement.style.setProperty("--accent",p[0]);document.documentElement.style.setProperty("--accent-glow",p[1]);document.documentElement.style.setProperty("--neon-glow","0 0 18px "+p[1]);let mark=brand.querySelector(".space-ai-mark");if(!mark){mark=document.createElementNS("http://www.w3.org/2000/svg","svg");mark.classList.add("space-ai-mark");mark.setAttribute("viewBox","0 0 48 48");mark.style.cssText="width:29px;height:29px;vertical-align:middle;margin-right:9px;color:var(--accent);filter:drop-shadow(0 0 7px var(--accent-glow))";brand.prepend(mark);}mark.innerHTML=icons[style.icon]||icons.star;}
- function say(t,who){const n=document.createElement("div");n.className="space-ai-msg "+who;n.textContent=t;messages.appendChild(n);messages.scrollTop=messages.scrollHeight;}
- function choose(v){if(palettes[v]){style.color=v;apply();localStorage.setItem(key,JSON.stringify(style));say("Done — changed the site glow to "+v+".","bot");}else if(icons[v]){style.icon=v;apply();localStorage.setItem(key,JSON.stringify(style));say("Done — changed the site logo to a "+v+".","bot");}else if(v==="reset"){style={color:"blue",icon:"star"};apply();localStorage.removeItem(key);say("Reset the SpaceArcades logo and glow.","bot");}else say("I can change the glow to blue, purple, pink or gold, or switch the logo to a rocket, planet or star.","bot");}
- apply();fab.addEventListener("click",()=>panel.classList.toggle("open"));document.getElementById("spaceAIClose").addEventListener("click",()=>panel.classList.remove("open"));panel.querySelectorAll("[data-spaceai]").forEach(b=>b.addEventListener("click",()=>choose(b.dataset.spaceai)));
- document.getElementById("spaceAIForm").addEventListener("submit",e=>{e.preventDefault();const input=document.getElementById("spaceAIInput"),p=input.value.trim().toLowerCase();if(!p)return;say(input.value.trim(),"user");input.value="";if(/reset|default|undo/.test(p))choose("reset");else if(/purple|violet/.test(p))choose("purple");else if(/pink|rose/.test(p))choose("pink");else if(/gold|yellow/.test(p))choose("gold");else if(/blue|cyan/.test(p))choose("blue");else if(/rocket/.test(p))choose("rocket");else if(/planet|saturn/.test(p))choose("planet");else if(/star|spark/.test(p))choose("star");else choose("help");});
+ const fab=document.getElementById("spaceAIFab");
+ const panel=document.getElementById("spaceAIPanel");
+ const close=document.getElementById("spaceAIClose");
+ const form=document.getElementById("spaceAIForm");
+ const input=document.getElementById("spaceAIInput");
+ const send=document.getElementById("spaceAISend");
+ const messagesEl=document.getElementById("spaceAIMessages");
+ if(!fab||!panel||!form||!input||!messagesEl)return;
+ const history=[];
+ function addMessage(text,role){
+   const node=document.createElement("div");
+   node.className="space-ai-msg "+(role==="user"?"user":"bot");
+   node.textContent=text;
+   messagesEl.appendChild(node);
+   messagesEl.scrollTop=messagesEl.scrollHeight;
+ }
+ fab.addEventListener("click",()=>{panel.classList.toggle("open");if(panel.classList.contains("open"))input.focus();});
+ close.addEventListener("click",()=>panel.classList.remove("open"));
+ form.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const text=input.value.trim();
+   if(!text||send.disabled)return;
+   input.value="";
+   addMessage(text,"user");
+   history.push({role:"user",content:text});
+   send.disabled=true;send.textContent="…";
+   const pending=document.createElement("div");
+   pending.className="space-ai-msg bot";pending.textContent="Space AI is thinking…";
+   messagesEl.appendChild(pending);messagesEl.scrollTop=messagesEl.scrollHeight;
+   try{
+     const response=await fetch("https://space-gules-three.vercel.app/api/chat",{
+       method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({messages:history.slice(-10)})
+     });
+     const data=await response.json().catch(()=>({}));
+     pending.remove();
+     if(!response.ok)throw new Error(data.error||"Chat request failed.");
+     const reply=String(data.reply||"I couldn't generate a reply. Please try again.");
+     addMessage(reply,"bot");
+     history.push({role:"assistant",content:reply});
+   }catch(error){
+     pending.remove();
+     addMessage(error.message||"Space AI is temporarily unavailable. Please try again.","bot");
+   }finally{
+     send.disabled=false;send.textContent="Send";input.focus();
+   }
+ });
 })();
 </script>
-
 </body>
 
 </html>
