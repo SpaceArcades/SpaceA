@@ -34,31 +34,54 @@ export default async function handler(req, res) {
 
     if (!safeMessages.length) return res.status(400).json({ error: "Message cannot be empty." });
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://spacearcades.github.io/SpaceA/",
-        "X-OpenRouter-Title": "SpaceArcades"
+    const requestMessages = [
+      {
+        role: "system",
+        content: "You are Space AI, the friendly assistant for the SpaceArcades gaming website. Help visitors with games, explain features, and answer questions clearly. You cannot actually change, add, delete, restore, rename, or edit games yet. Never claim that you performed a website action. If asked to manage a game, explain that game-management actions are not connected yet and that an authorized site manager must use the management panel."
       },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: "system",
-            content: "You are Space AI, the friendly assistant for the SpaceArcades gaming website. Help visitors with games, explain features, and answer questions clearly. You cannot actually change, add, delete, restore, rename, or edit games yet. Never claim that you performed a website action. If asked to manage a game, explain that game-management actions are not connected yet and that an authorized site manager must use the management panel."
-          },
-          ...safeMessages
-        ],
-        temperature: 0.7,
-        max_tokens: 700
-      })
-    });
+      ...safeMessages
+    ];
 
-    const data = await response.json().catch(() => ({}));
+    async function askOpenRouter(modelToUse) {
+      const result = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://spacearcades.github.io/SpaceA/",
+          "X-OpenRouter-Title": "SpaceArcades"
+        },
+        body: JSON.stringify({
+          model: modelToUse,
+          messages: requestMessages,
+          temperature: 0.7,
+          max_tokens: 700
+        })
+      });
+      const resultData = await result.json().catch(() => ({}));
+      return { response: result, data: resultData };
+    }
+
+    let { response, data } = await askOpenRouter(model);
+    let modelUsed = model;
+
+    // If the selected free provider is busy or rate-limited, let OpenRouter
+    // choose another available free chat model automatically.
+    if ((response.status === 429 || response.status >= 500) && model !== "openrouter/free") {
+      console.warn("Primary OpenRouter model unavailable; trying free-model routing.", response.status);
+      const fallback = await askOpenRouter("openrouter/free");
+      response = fallback.response;
+      data = fallback.data;
+      modelUsed = "openrouter/free";
+    }
+
     if (!response.ok) {
-      const providerMessage = String(data?.error?.message || data?.message || "No explanation was returned.")
+      const rawError = data?.error;
+      const providerMessage = String(
+        (typeof rawError === "string" ? rawError : rawError?.message) ||
+        data?.message ||
+        "No explanation was returned."
+      )
         .replace(/Bearer\\s+\\S+/gi, "Bearer [hidden]")
         .replace(/sk-or-v1-[a-zA-Z0-9_-]+/g, "[hidden key]")
         .slice(0, 500);
@@ -67,7 +90,7 @@ export default async function handler(req, res) {
         error: "OpenRouter returned an error.",
         providerStatus: response.status,
         providerMessage,
-        modelTried: model
+        modelTried: modelUsed
       });
     }
     const reply = data?.choices?.[0]?.message?.content;
