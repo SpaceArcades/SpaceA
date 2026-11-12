@@ -3158,6 +3158,23 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       reader.onerror = () => { status.textContent = "Could not read that image file."; };
       reader.readAsDataURL(file);
     }
+    // Small bridge used by Space AI: it opens the existing thumbnail uploader,
+    // but the normal role checks and Save button still perform the actual change.
+    window.SpaceArcadesAIAction = function(action, gameName) {
+      if (action !== "add_thumbnail") return { ok: false, message: "I can only help add a missing thumbnail right now." };
+      if (!hasGameManagementAccess()) return { ok: false, message: "Owner or Co-Owner access is needed to add thumbnails." };
+      const wanted = String(gameName || "").trim().toLowerCase();
+      const game = allGameEntries().find(item => item.title.toLowerCase() === wanted || item.key.toLowerCase() === wanted);
+      if (!game) return { ok: false, message: "I couldn't find that game. Check its exact name in the game list." };
+      if (gameHasThumbnail(game)) return { ok: false, message: game.title + " already has a thumbnail, so I won't replace it." };
+      openAccessPanel(accessMode);
+      const selector = document.getElementById("thumbnailGameSelect");
+      selector.value = game.key;
+      if (selector.value !== game.key) return { ok: false, message: "That game isn't available in the missing-thumbnail list." };
+      document.getElementById("thumbnailStatus").textContent = "Choose an image for " + game.title + ".";
+      document.getElementById("thumbnailFileInput").click();
+      return { ok: true, message: "Choose an image for " + game.title + ". Then click Save thumbnail in the panel." };
+    };
     document.getElementById("saveGameThumbnailBtn").addEventListener("click", () => {
       const file = document.getElementById("thumbnailFileInput").files[0];
       saveMissingGameThumbnail(file);
@@ -3516,6 +3533,13 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    if(!text||send.disabled)return;
    input.value="";
    addMessage(text,"user");
+   const thumbnailRequest = text.match(/(?:add|set|upload|change)\\s+(?:a\\s+)?(?:game\\s+)?thumbnail\\s+(?:for\\s+)?(.+)/i);
+   if (thumbnailRequest && window.SpaceArcadesAIAction) {
+     const actionResult = window.SpaceArcadesAIAction("add_thumbnail", thumbnailRequest[1].replace(/[.!?]+$/, "").trim());
+     addMessage(actionResult.message, "bot");
+     history.push({role:"assistant",content:actionResult.message});
+     return;
+   }
    history.push({role:"user",content:text});
    send.disabled=true;send.textContent="…";
    const pending=document.createElement("div");
