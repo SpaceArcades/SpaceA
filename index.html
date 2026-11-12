@@ -3397,7 +3397,7 @@
 
 <button id="aiFab" class="hidden" type="button">🤖 LET AI CONTROL</button>
 <div id="aiPanel" class="hidden" role="dialog" aria-label="AI assistant">
-  <header><strong>SpaceArcades AI</strong><span><button id="aiClear" type="button">Clear chat</button> · <button id="aiClose" type="button">Close</button></span></header>
+  <header><strong>SpaceArcades AI</strong><span><button id="aiKey" type="button" title="Optional Gemini key">🔑</button> · <button id="aiClear" type="button">Clear chat</button> · <button id="aiClose" type="button">Close</button></span></header>
   <div id="aiMessages"></div>
   <div id="aiAttachInfo"></div>
   <form id="aiForm">
@@ -3409,7 +3409,36 @@
 
 <script>
 (function () {
-  const AI_API_URL = "https://space-gules-three.vercel.app/api/ai";
+  // The AI runs straight from this page — no server file, no publishing, no key needed.
+  // Free AI: https://pollinations.ai (about 1 reply every 45 seconds).
+  // Optional: press 🔑 in the AI window and paste a free Gemini key (aistudio.google.com/apikey)
+  // for faster, unlimited replies. The key is kept only in that browser.
+  const FREE_AI_URL = "https://text.pollinations.ai/openai";
+  const GEMINI_KEY_STORE = "spaceArcadesGeminiKeyV1";
+  const SYSTEM_PROMPT = `You are the AI assistant that controls the website "SpaceArcades" for its Owner/Co-Owner.
+You can do ANYTHING they ask by returning actions. Always reply with ONLY this JSON:
+{"reply":"short friendly message","actions":[ ... ]}
+
+Available actions:
+- {"type":"set_logo","svg":"<svg ...>...</svg>"}            make a new logo (header icon). Draw a clean SVG, viewBox="0 0 64 64", no text unless asked, no scripts.
+- {"type":"set_logo","imageUrl":"https://..."}              logo from a direct image link the user gave
+- {"type":"set_logo","useAttachedImage":true}               logo from the image the user attached
+- {"type":"reset_logo"}
+- {"type":"set_site_name","text":"New Name"}
+- {"type":"add_game","title":"Name","url":"https://...","svg":"<svg ...>"}   add a game; ALWAYS include a thumbnail svg (viewBox="0 0 320 180", colorful cover art with the game name) unless user attached an image (then "useAttachedImage":true) or gave an imageUrl
+- {"type":"set_thumbnail","key":"gameKey","svg":"<svg ...>"}    (or imageUrl / useAttachedImage)
+- {"type":"remove_thumbnail","key":"gameKey"}
+- {"type":"change_game_link","key":"gameKey","url":"https://..."}
+- {"type":"rename_game","key":"gameKey","title":"New title"}   (only games with custom=true)
+- {"type":"remove_game","key":"gameKey"}
+- {"type":"restore_game","key":"gameKey"}
+- {"type":"set_custom_css","css":"..."}   change colors/look of the whole site. Send the FULL css (it replaces the old custom css). Site uses CSS variables --bg --panel --panel-border --text --muted --accent --accent-glow and classes .game-card .tab .panel header h1.
+- {"type":"clear_custom_css"}
+- {"type":"run_js","code":"..."}   one-time JavaScript in the owner's browser, only when nothing else can do it
+
+Rules: use the "key" values from the games list in the context. Only use game URLs the user gave you or that you are sure are real and playable.
+If the user attached an image, use "useAttachedImage":true to use it.
+If the user just chats, return "actions":[]. Keep "reply" short.`;
   const CHAT_KEY = "spaceArcadesAiChatV1";
   const SETTINGS_KEY = "spaceArcadesSiteSettingsV1";
 
@@ -3603,10 +3632,82 @@
     renderManagedGames(); refreshThumbnailSelector();
     if (needsSave) {
       try { await saveSharedStateNow(); done.push("✅ Saved for everyone"); }
-      catch (error) { done.push("Saved only in this browser — shared save failed: " + error.message); }
+      catch (error) { done.push("💾 Saved in this browser (shared save for everyone is offline right now)"); }
     }
     if (needsReload) setTimeout(() => location.reload(), 900);
     return done;
+  }
+
+  // ---------- talk to the AI (runs in the browser, no server) ----------
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function parseAiJson(text) {
+    text = String(text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    try { return JSON.parse(text); } catch {}
+    const m = text.match(/\{[\s\S]*\}/);
+    if (m) { try { return JSON.parse(m[0]); } catch {} }
+    return { reply: text || "Done.", actions: [] };
+  }
+
+  function buildMessages(history, context, hasImage) {
+    const msgs = history.slice(-12).map(m => ({ role: m.role === "user" ? "user" : "assistant", content: String(m.text || "").slice(0, 6000) }));
+    while (msgs.length && msgs[0].role !== "user") msgs.shift();
+    const last = msgs[msgs.length - 1];
+    last.content = "Current website state:\n" + JSON.stringify(context).slice(0, 12000) + "\n\n" + last.content +
+      (hasImage ? "\n\n(I attached an image. Use \"useAttachedImage\":true to use it.)" : "");
+    return msgs;
+  }
+
+  async function askFreeAi(messages, thinking) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const res = await fetch(FREE_AI_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "openai", messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+          response_format: { type: "json_object" } })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return parseAiJson(data?.choices?.[0]?.message?.content);
+      if (res.status === 402 || res.status === 429) {
+        // Free AI allows about 1 reply every 45 seconds — wait and try again by itself.
+        const msg = (data && data.error && data.error.message) || "";
+        let wait = Number((msg.match(/Retry after (\d+)/i) || [])[1]) || Number(res.headers.get("Retry-After")) || 15;
+        wait = Math.min(Math.max(wait, 3), 50);
+        for (let s = wait; s > 0; s--) { thinking.textContent = "Free AI is busy — trying again in " + s + "s… (press 🔑 for no waiting)"; await sleep(1000); }
+        thinking.textContent = "AI is thinking…";
+        continue;
+      }
+      throw new Error((data && data.error && (data.error.message || data.error)) || "AI error " + res.status);
+    }
+    throw new Error("Free AI is busy. Wait a minute and try again, or press 🔑 to add a free Gemini key.");
+  }
+
+  async function askGemini(key, messages, image) {
+    const contents = messages.map(m => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: m.content }] }));
+    if (image && image.startsWith("data:image/")) {
+      const [meta, data] = image.split(",");
+      contents[contents.length - 1].parts.push({ inline_data: { mime_type: meta.slice(5, meta.indexOf(";")), data } });
+    }
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + encodeURIComponent(key), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }, contents,
+        generationConfig: { responseMimeType: "application/json", temperature: 0.7 } })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((data && data.error && data.error.message) || "Gemini error " + res.status);
+    return parseAiJson(data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join(""));
+  }
+
+  async function askAi(history, context, hasImage, thinking) {
+    const messages = buildMessages(history, context, hasImage);
+    if (!messages.length) throw new Error("No message");
+    const key = localStorage.getItem(GEMINI_KEY_STORE);
+    if (key) {
+      try { return await askGemini(key, messages, attachedImage); }
+      catch (error) { thinking.textContent = "Gemini failed (" + error.message + ") — using free AI…"; }
+    }
+    return askFreeAi(messages, thinking);
   }
 
   // ---------- chat UI ----------
@@ -3645,6 +3746,13 @@
 
   fab.addEventListener("click", () => { panel.classList.toggle("hidden"); renderChat(); input.focus(); });
   document.getElementById("aiClose").addEventListener("click", () => panel.classList.add("hidden"));
+  document.getElementById("aiKey").addEventListener("click", () => {
+    const now = localStorage.getItem(GEMINI_KEY_STORE);
+    const v = prompt("Optional: paste a free Gemini key from aistudio.google.com/apikey for faster AI.\nIt is saved only in this browser. Leave empty to use the free AI.", now || "");
+    if (v === null) return;
+    if (v.trim()) localStorage.setItem(GEMINI_KEY_STORE, v.trim()); else localStorage.removeItem(GEMINI_KEY_STORE);
+    addBubble("note", v.trim() ? "🔑 Gemini key saved in this browser." : "Using the free AI (no key).");
+  });
   document.getElementById("aiClear").addEventListener("click", () => { chat = []; saveChat(); renderChat(); });
 
   attachInput.addEventListener("change", async () => {
@@ -3670,16 +3778,9 @@
         removed: deletedGameIds.has(g.key), hasThumbnail: gameHasThumbnail(g) }))
     };
     try {
-      const res = await fetch(AI_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: accessMode, code: sessionStorage.getItem(SHARED_CODE_KEY) || "",
-          messages: chat, context, image: attachedImage })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "AI error " + res.status);
+      const data = await askAi(chat, context, !!attachedImage, thinking);
       thinking.remove();
-      const results = await runActions(data.actions);
+      const results = await runActions(Array.isArray(data.actions) ? data.actions.slice(0, 20) : []);
       const reply = (data.reply || "Done.") + (results.length ? "\n\n" + results.join("\n") : "");
       addBubble("bot", reply);
       chat.push({ role: "model", text: reply });
