@@ -1566,7 +1566,7 @@
             </button>
 
             <button class="game-card" type="button" id="deltaruneGameCard">
-              <img class="game-thumbnail" src="delt.png" alt="DELTARUNE Battle Simulator" onerror="this.style.display=\'none\'">
+              <img class="game-thumbnail" src="delt.png" alt="DELTARUNE Battle Simulator" onerror="this.style.display='none'">
               <div class="game-card-body"><h3>DELTARUNE</h3></div>
             </button>
 
@@ -3365,6 +3365,334 @@
 
   </script>
 
+
+<!-- ===== SPACEARCADES AI ASSISTANT (paste right above </body>) ===== -->
+<style>
+  #aiFab { position:fixed; right:18px; bottom:72px; z-index:1001; padding:10px 18px; border-radius:999px;
+    border:1px solid #ffd76a; background:#050505; color:#ffd76a; font-weight:800; letter-spacing:.06em; cursor:pointer;
+    box-shadow:0 0 18px rgba(255,215,106,.35); transition:transform .2s; }
+  #aiFab:hover { transform:translateY(-3px); }
+  #aiFab.hidden, #aiPanel.hidden { display:none; }
+  #aiPanel { position:fixed; right:18px; bottom:126px; z-index:2500; width:min(380px,calc(100vw - 24px)); height:min(540px,70vh);
+    display:flex; flex-direction:column; background:#050507; color:#f8fafc; border:1px solid rgba(255,215,106,.6);
+    border-radius:16px; box-shadow:0 18px 55px rgba(0,0,0,.8); overflow:hidden; }
+  #aiPanel header { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,.12); }
+  #aiPanel header strong { color:#ffd76a; }
+  #aiPanel header button { color:#94a3b8; cursor:pointer; font-size:.8rem; }
+  #aiMessages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; font-size:.85rem; }
+  .ai-msg { padding:8px 11px; border-radius:12px; max-width:88%; white-space:pre-wrap; word-break:break-word; }
+  .ai-msg.user { align-self:flex-end; background:#ffd76a; color:#111; }
+  .ai-msg.bot { align-self:flex-start; background:rgba(255,255,255,.08); }
+  .ai-msg.note { align-self:center; color:#94a3b8; font-size:.75rem; background:none; }
+  .ai-msg img { display:block; max-width:140px; max-height:90px; margin-top:6px; border-radius:6px; }
+  #aiForm { display:flex; gap:6px; padding:10px; border-top:1px solid rgba(255,255,255,.12); align-items:center; }
+  #aiInput { flex:1; padding:9px 10px; border-radius:10px; background:rgba(255,255,255,.07); color:#f8fafc; border:1px solid rgba(255,255,255,.15); }
+  #aiForm button, #aiAttachLabel { padding:9px 11px; border-radius:10px; background:#ffd76a; color:#111; font-weight:700; cursor:pointer; }
+  #aiAttachLabel { background:rgba(255,255,255,.1); color:#f8fafc; }
+  #aiAttachInfo { padding:0 12px 6px; font-size:.72rem; color:#94a3b8; }
+  header .brand-link { display:inline-flex; align-items:center; text-decoration:none; }
+  .site-ai-logo { height:36px; width:auto; max-width:120px; object-fit:contain; vertical-align:middle; margin-right:10px; }
+  @media (max-width:600px) { #aiFab { right:12px; bottom:64px; } #aiPanel { right:12px; bottom:112px; } }
+</style>
+
+<button id="aiFab" class="hidden" type="button">🤖 LET AI CONTROL</button>
+<div id="aiPanel" class="hidden" role="dialog" aria-label="AI assistant">
+  <header><strong>SpaceArcades AI</strong><span><button id="aiClear" type="button">Clear chat</button> · <button id="aiClose" type="button">Close</button></span></header>
+  <div id="aiMessages"></div>
+  <div id="aiAttachInfo"></div>
+  <form id="aiForm">
+    <label id="aiAttachLabel" title="Attach an image">📎<input id="aiAttach" type="file" accept="image/*" hidden></label>
+    <input id="aiInput" type="text" autocomplete="off" placeholder="e.g. make my logo a neon rocket">
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  const AI_API_URL = "https://space-gules-three.vercel.app/api/ai";
+  const CHAT_KEY = "spaceArcadesAiChatV1";
+  const SETTINGS_KEY = "spaceArcadesSiteSettingsV1";
+
+  // ---------- saved site settings (logo, site name, custom CSS) ----------
+  let siteSettings = {};
+  try { siteSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch { siteSettings = {}; }
+
+  // Make every shared save also include siteSettings so the logo is saved for everyone.
+  const originalSnapshot = sharedSnapshot;
+  sharedSnapshot = function () { return Object.assign(originalSnapshot(), { siteSettings }); };
+
+  // When shared data loads/refreshes, also read the saved siteSettings.
+  const originalLoad = loadSharedState;
+  loadSharedState = async function () {
+    await originalLoad();
+    try {
+      const res = await fetch(SHARED_API_URL, { cache: "no-store" });
+      const data = await res.json();
+      if (data && data.state && data.state.siteSettings && typeof data.state.siteSettings === "object") {
+        siteSettings = data.state.siteSettings;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(siteSettings));
+      }
+    } catch {}
+    applySiteSettings();
+  };
+
+  function applySiteSettings() {
+    const brand = document.querySelector("header .brand-link");
+    if (brand) {
+      brand.replaceChildren();
+      if (siteSettings.logo) {
+        const img = document.createElement("img");
+        img.className = "site-ai-logo";
+        img.alt = "";
+        img.src = siteSettings.logo;
+        brand.appendChild(img);
+      }
+      brand.appendChild(document.createTextNode(siteSettings.siteName || "SpaceArcades"));
+    }
+    let style = document.getElementById("aiCustomCss");
+    if (!style) { style = document.createElement("style"); style.id = "aiCustomCss"; document.head.appendChild(style); }
+    style.textContent = siteSettings.customCss || "";
+  }
+  applySiteSettings();
+
+  // ---------- helpers ----------
+  const canUseAi = () => accessMode === "owner" || accessMode === "coowner";
+  const svgToDataUrl = svg => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+
+  function imageFromAction(a) {
+    if (a.useAttachedImage && attachedImage) return attachedImage;
+    if (a.svg && /^\s*<svg[\s>]/i.test(a.svg) && a.svg.length < 80000) return svgToDataUrl(a.svg);
+    if (a.imageUrl) { try { const u = new URL(a.imageUrl); if (/^https?:$/.test(u.protocol)) return u.href; } catch {} }
+    return null;
+  }
+
+  function findGame(key) { return allGameEntries().find(g => g.key === key); }
+
+  function setThumbnail(key, src) {
+    const card = findGameCard(key);
+    if (card) card.querySelectorAll("img.game-thumbnail").forEach(img => img.remove());
+    const custom = customGames.find(g => g.id === key);
+    if (custom) custom.image = "";
+    savedGameThumbnails[key] = src;
+    localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+    applySavedGameThumbnails();
+  }
+
+  function resizeImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const scale = Math.min(1, 512 / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ---------- run the actions the AI sends back ----------
+  async function runActions(actions) {
+    const done = [];
+    let needsSave = false, needsReload = false;
+    for (const a of actions || []) {
+      try {
+        switch (a.type) {
+          case "set_logo": {
+            const src = imageFromAction(a);
+            if (!src) throw new Error("no usable logo image");
+            siteSettings.logo = src; needsSave = true; done.push("Logo changed"); break;
+          }
+          case "reset_logo": delete siteSettings.logo; needsSave = true; done.push("Logo reset"); break;
+          case "set_site_name":
+            if (!a.text) throw new Error("no name");
+            siteSettings.siteName = String(a.text).slice(0, 40); needsSave = true; done.push("Site name changed"); break;
+          case "add_game": {
+            const url = safeGameUrl(a.url || "");
+            if (!a.title || !url) throw new Error("game needs a name and a valid link");
+            const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+            const game = { id, title: String(a.title).slice(0, 70), url, image: "" };
+            customGames.push(game);
+            localStorage.setItem(CUSTOM_GAMES_KEY, JSON.stringify(customGames));
+            appendGameCard(game, id);
+            const src = imageFromAction(a);
+            if (src) setThumbnail(id, src);
+            needsSave = true; done.push("Added game: " + game.title); break;
+          }
+          case "set_thumbnail": {
+            const game = findGame(a.key);
+            const src = imageFromAction(a);
+            if (!game || !src) throw new Error("game or image not found");
+            setThumbnail(a.key, src); needsSave = true; done.push("Thumbnail set: " + game.title); break;
+          }
+          case "remove_thumbnail": {
+            const card = findGameCard(a.key);
+            delete savedGameThumbnails[a.key];
+            localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+            const img = card && card.querySelector('img[data-custom-thumbnail="true"]');
+            if (img) img.remove();
+            needsSave = true; done.push("Thumbnail removed"); break;
+          }
+          case "change_game_link": {
+            const game = findGame(a.key); const url = safeGameUrl(a.url || "");
+            if (!game || !url) throw new Error("game or link not valid");
+            sharedGameLinks[a.key] = url;
+            const custom = customGames.find(g => g.id === a.key);
+            if (custom) custom.url = url;
+            needsSave = true; done.push("Link changed: " + game.title); break;
+          }
+          case "rename_game": {
+            const custom = customGames.find(g => g.id === a.key);
+            if (!custom || !a.title) throw new Error("only added games can be renamed");
+            custom.title = String(a.title).slice(0, 70);
+            const card = document.getElementById("added-" + a.key);
+            if (card) card.remove();
+            appendGameCard(custom, custom.id);
+            applySavedGameThumbnails();
+            needsSave = true; done.push("Renamed to " + custom.title); break;
+          }
+          case "remove_game": {
+            const game = findGame(a.key);
+            if (!game) throw new Error("game not found");
+            deletedGameIds.add(a.key);
+            localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
+            if (game.custom) {
+              const idx = customGames.findIndex(g => g.id === a.key);
+              const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
+              saved[a.key] = customGames[idx];
+              localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved));
+              customGames.splice(idx, 1);
+            }
+            const card = document.getElementById(existingCardId(a.key));
+            if (card) card.remove();
+            if (currentGameKey === a.key) closeGame();
+            needsSave = true; done.push("Removed: " + game.title); break;
+          }
+          case "restore_game": {
+            deletedGameIds.delete(a.key);
+            localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
+            const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
+            if (saved[a.key]) { customGames.push(saved[a.key]); delete saved[a.key]; localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved)); }
+            needsSave = true; needsReload = true; done.push("Restored game"); break;
+          }
+          case "set_custom_css":
+            siteSettings.customCss = String(a.css || "").slice(0, 20000); needsSave = true; done.push("Style updated"); break;
+          case "clear_custom_css":
+            delete siteSettings.customCss; needsSave = true; done.push("Custom style removed"); break;
+          case "run_js":
+            // One-time code, only in YOUR browser, and only after you say OK.
+            if (a.code && confirm("The AI wants to run this code in your browser:\n\n" + String(a.code).slice(0, 800) + "\n\nRun it?")) {
+              new Function(a.code)(); done.push("Ran code");
+            } else done.push("Skipped code");
+            break;
+          default: done.push("Unknown action: " + a.type);
+        }
+      } catch (error) { done.push("⚠️ " + a.type + " failed: " + error.message); }
+    }
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(siteSettings));
+    localStorage.setItem(CUSTOM_GAMES_KEY, JSON.stringify(customGames));
+    applySiteSettings();
+    renderManagedGames(); refreshThumbnailSelector();
+    if (needsSave) {
+      try { await saveSharedStateNow(); done.push("✅ Saved for everyone"); }
+      catch (error) { done.push("Saved only in this browser — shared save failed: " + error.message); }
+    }
+    if (needsReload) setTimeout(() => location.reload(), 900);
+    return done;
+  }
+
+  // ---------- chat UI ----------
+  const fab = document.getElementById("aiFab");
+  const panel = document.getElementById("aiPanel");
+  const box = document.getElementById("aiMessages");
+  const input = document.getElementById("aiInput");
+  const attachInput = document.getElementById("aiAttach");
+  const attachInfo = document.getElementById("aiAttachInfo");
+  let attachedImage = null;
+  let chat = [];
+  try { chat = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]"); } catch { chat = []; }
+
+  function saveChat() {
+    chat = chat.slice(-30);
+    try { localStorage.setItem(CHAT_KEY, JSON.stringify(chat.map(m => ({ role: m.role, text: m.text })))); } catch {}
+  }
+  function addBubble(kind, text, img) {
+    const div = document.createElement("div");
+    div.className = "ai-msg " + kind;
+    div.textContent = text;
+    if (img) { const i = document.createElement("img"); i.src = img; div.appendChild(i); }
+    box.appendChild(div); box.scrollTop = box.scrollHeight;
+    return div;
+  }
+  function renderChat() {
+    box.replaceChildren();
+    if (!chat.length) addBubble("note", "Ask me anything: change the logo, add games, make thumbnails, change colors…");
+    chat.forEach(m => addBubble(m.role === "user" ? "user" : "bot", m.text));
+  }
+
+  setInterval(() => {
+    fab.classList.toggle("hidden", !canUseAi());
+    if (!canUseAi()) panel.classList.add("hidden");
+  }, 700);
+
+  fab.addEventListener("click", () => { panel.classList.toggle("hidden"); renderChat(); input.focus(); });
+  document.getElementById("aiClose").addEventListener("click", () => panel.classList.add("hidden"));
+  document.getElementById("aiClear").addEventListener("click", () => { chat = []; saveChat(); renderChat(); });
+
+  attachInput.addEventListener("change", async () => {
+    const file = attachInput.files[0];
+    if (!file) return;
+    try { attachedImage = await resizeImage(file); attachInfo.textContent = "📎 Image attached: " + file.name; }
+    catch { attachedImage = null; attachInfo.textContent = "Could not read that image."; }
+  });
+
+  document.getElementById("aiForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text || !canUseAi()) return;
+    input.value = "";
+    addBubble("user", text, attachedImage);
+    chat.push({ role: "user", text });
+    const thinking = addBubble("note", "AI is thinking…");
+    const context = {
+      siteName: siteSettings.siteName || "SpaceArcades",
+      hasLogo: !!siteSettings.logo,
+      customCss: siteSettings.customCss || "",
+      games: allGameEntries().map(g => ({ key: g.key, title: g.title, url: g.url, custom: g.custom,
+        removed: deletedGameIds.has(g.key), hasThumbnail: gameHasThumbnail(g) }))
+    };
+    try {
+      const res = await fetch(AI_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: accessMode, code: sessionStorage.getItem(SHARED_CODE_KEY) || "",
+          messages: chat, context, image: attachedImage })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "AI error " + res.status);
+      thinking.remove();
+      const results = await runActions(data.actions);
+      const reply = (data.reply || "Done.") + (results.length ? "\n\n" + results.join("\n") : "");
+      addBubble("bot", reply);
+      chat.push({ role: "model", text: reply });
+      saveChat();
+    } catch (error) {
+      thinking.textContent = "⚠️ " + error.message;
+    } finally {
+      attachedImage = null; attachInput.value = ""; attachInfo.textContent = "";
+    }
+  });
+})();
+</script>
+<!-- ===== END SPACEARCADES AI ASSISTANT ===== -->
 
 </body>
 
