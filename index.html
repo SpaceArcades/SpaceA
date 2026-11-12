@@ -3428,7 +3428,15 @@
      });
      const data=await response.json().catch(()=>({}));
      pending.remove();
-     if(!response.ok)throw new Error(data.error||"Chat request failed.");
+     if(!response.ok){
+       const details = [
+         data.error || "Chat request failed.",
+         data.providerStatus ? "HTTP " + data.providerStatus : "",
+         data.providerMessage || "",
+         data.modelTried ? "Model: " + data.modelTried : ""
+       ].filter(Boolean).join("\\n");
+       throw new Error(details);
+     }
      const reply=String(data.reply||"I couldn't generate a reply. Please try again.");
      addMessage(reply,"bot");
      history.push({role:"assistant",content:reply});
