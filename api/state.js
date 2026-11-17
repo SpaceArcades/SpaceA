@@ -43,7 +43,11 @@ function authorizationError(role, code) {
 async function readState() {
   const rows = await sql()`SELECT state FROM shared_state WHERE id = 1 LIMIT 1`;
   if (!rows.length) return { initialized: false, state: EMPTY };
-  const state = expireRestoreEntries(rows[0].state || { ...EMPTY });
+  const original = rows[0].state || { ...EMPTY };
+  const state = expireRestoreEntries({ ...original });
+  if (JSON.stringify(state) !== JSON.stringify(original)) {
+    await sql()`UPDATE shared_state SET state = ${JSON.stringify(state)}::jsonb, updated_at = NOW() WHERE id = 1`;
+  }
   return { initialized: true, state };
 }
 
