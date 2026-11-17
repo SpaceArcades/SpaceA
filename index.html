@@ -3576,7 +3576,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    const isOwner = localStorage.getItem("spaceArcadesAccessModeV1") === "owner" && !!sessionStorage.getItem("spaceArcadesSharedWriteCodeV1");
    const urlMatch = text.match(/https?:\/\/[^\s<>"']+/i);
    const asksForStats = /\b(views?|visitors?|online|how many people|site stats|statistics)\b/i.test(text);
-   const asksToAddGame = /\b(add|create|publish|put)\b/i.test(text) && /\b(game|arcade)\b/i.test(text) && urlMatch;
+   const asksToAddGame = /\b(add|create|publish|put)\b/i.test(text) && !/\bthumbnail\b/i.test(text) && urlMatch;
    if (isOwner && asksForStats && window.SpaceArcadesAIAction) {
      send.disabled=true;send.textContent="…";
      try {
@@ -3629,6 +3629,22 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
        throw new Error(details);
      }
      const reply=String(data.reply||"I couldn't generate a reply. Please try again.");
+     // If the Owner asked Space AI to find a game, publish a result with a verified iframe URL.
+     if (isOwner && /\b(add|create|publish|put)\b/i.test(text) && !/\bthumbnail\b/i.test(text) && !/https?:\/\//i.test(text) && Array.isArray(data.webResults)) {
+       const found = data.webResults.find(item => item && item.embed && /^https?:\/\//i.test(item.embed));
+       if (found) {
+         const title = String(found.title || text.replace(/\b(add|create|publish|put)\b/gi," ").trim()).replace(/\s+/g," ").slice(0,70);
+         const added = await window.SpaceArcadesAIAction("add_game",{title,url:found.embed});
+         addMessage(added.message,"bot");
+         history.push({role:"assistant",content:added.message});
+         return;
+       }
+       if (!reply.includes("http")) {
+         addMessage(reply + "\nI searched, but couldn't verify a direct playable embed URL. Try another game title or send me a link.","bot");
+         history.push({role:"assistant",content:reply});
+         return;
+       }
+     }
      addMessage(reply,"bot");
      history.push({role:"assistant",content:reply});
    }catch(error){
