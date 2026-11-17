@@ -1,7 +1,26 @@
 import { neon } from "@neondatabase/serverless";
 import { timingSafeEqual } from "node:crypto";
 
-const EMPTY = { customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {}, gameLinks: {} };
+const EMPTY = { customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {} };
+const RESTORE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+
+function expireRestoreEntries(state) {
+  const times = state.deletedGameTimes && typeof state.deletedGameTimes === "object" ? state.deletedGameTimes : {};
+  const backups = state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {};
+  const ids = Array.isArray(state.deletedGameIds) ? state.deletedGameIds : [];
+  const now = Date.now();
+  for (const id of ids) {
+    const removedAt = Number(times[id] || 0);
+    if (!removedAt || now - removedAt >= RESTORE_WINDOW_MS) {
+      delete times[id];
+      delete backups[id];
+    }
+  }
+  for (const id of Object.keys(times)) if (!ids.includes(id)) delete times[id];
+  state.deletedGameTimes = times;
+  state.removedCustomGames = backups;
+  return state;
+}
 const sql = () => {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not configured");
   return neon(process.env.DATABASE_URL);
@@ -24,7 +43,8 @@ function authorizationError(role, code) {
 async function readState() {
   const rows = await sql()`SELECT state FROM shared_state WHERE id = 1 LIMIT 1`;
   if (!rows.length) return { initialized: false, state: EMPTY };
-  return { initialized: true, state: rows[0].state };
+  const state = expireRestoreEntries(rows[0].state || { ...EMPTY });
+  return { initialized: true, state };
 }
 
 export default async function handler(req, res) {
@@ -64,6 +84,7 @@ export default async function handler(req, res) {
       const current = await readState();
       state.deletedGameIds = current.state.deletedGameIds || [];
       state.removedCustomGames = current.state.removedCustomGames || {};
+      state.deletedGameTimes = current.state.deletedGameTimes || {};
       state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
       state.gameLinks = current.state.gameLinks || {};
       const oldIds = new Set((current.state.customGames || []).map(g => g.id));
@@ -79,10 +100,12 @@ export default async function handler(req, res) {
     const clean = {
       customGames: state.customGames.filter(g => g && typeof g.id === "string" && typeof g.title === "string" && typeof g.url === "string"),
       deletedGameIds: [...new Set(state.deletedGameIds.filter(id => typeof id === "string"))],
+      deletedGameTimes: state.deletedGameTimes && typeof state.deletedGameTimes === "object" ? state.deletedGameTimes : {},
       removedCustomGames: state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {},
       thumbnails: state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {},
       gameLinks: role === "admin" ? (state.gameLinks || {}) : (state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {})
     };
+    expireRestoreEntries(clean);
     await sql()`
       INSERT INTO shared_state (id, state, updated_at)
       VALUES (1, ${JSON.stringify(clean)}::jsonb, NOW())
