@@ -3204,8 +3204,9 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           )
         );
         if (!game) return { ok: false, message: "I couldn't find that game. Check its exact name in the game list." };
-        if (gameHasThumbnail(game)) return { ok: false, message: game.title + " already has a thumbnail, so I won't replace it." };
         const requestedImage = typeof payload === "object" && payload ? safeGameUrl(String(payload.image || "")) : null;
+        if (gameHasThumbnail(game) && !requestedImage) return { ok: false, message: game.title + " already has a thumbnail, and I couldn't find a replacement image online." };
+        const previousThumbnail = savedGameThumbnails[game.key];
         const generated = requestedImage || makeAIGameThumbnail(game.title);
         savedGameThumbnails[game.key] = generated;
         try {
@@ -3216,7 +3217,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           renderManagedGames();
           return { ok: true, message: requestedImage ? "🎨 Found an image online and published it as the thumbnail for " + game.title + "!" : "🎨 I could not find a usable image, so I created and published a custom SpaceArcades thumbnail for " + game.title + "." };
         } catch (error) {
-          delete savedGameThumbnails[game.key];
+          if (previousThumbnail === undefined) delete savedGameThumbnails[game.key];
+          else savedGameThumbnails[game.key] = previousThumbnail;
           try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); } catch {}
           return { ok: false, message: "I couldn't publish the thumbnail: " + error.message };
         }
