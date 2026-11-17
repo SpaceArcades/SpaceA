@@ -2727,7 +2727,32 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     }
 
     const DELETED_GAMES_KEY = "spaceArcadesDeletedGamesV1";
+    const DELETED_GAME_TIMES_KEY = "spaceArcadesDeletedGameTimesV1";
+    const RESTORE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
     const deletedGameIds = new Set(JSON.parse(localStorage.getItem(DELETED_GAMES_KEY) || "[]"));
+    let deletedGameTimes = {};
+    try { deletedGameTimes = JSON.parse(localStorage.getItem(DELETED_GAME_TIMES_KEY) || "{}") || {}; } catch { deletedGameTimes = {}; }
+
+    function cleanupExpiredRestoreEntries() {
+      const now = Date.now();
+      let changed = false;
+      for (const key of [...deletedGameIds]) {
+        const removedAt = Number(deletedGameTimes[key] || 0);
+        if (!removedAt || now - removedAt >= RESTORE_WINDOW_MS) {
+          if (deletedGameTimes[key]) { delete deletedGameTimes[key]; changed = true; }
+          if (removedCustomGames[key]) {
+            delete removedCustomGames[key];
+            changed = true;
+          }
+        }
+      }
+      for (const key of Object.keys(deletedGameTimes)) {
+        if (!deletedGameIds.has(key)) { delete deletedGameTimes[key]; changed = true; }
+      }
+      localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
+      localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedCustomGames || {}));
+      return changed;
+    }
 
     // ONE-TIME CLEANUP: remove games manually added by visitors in older versions.
     // The migration flag prevents this from deleting games added after this update.
@@ -2774,6 +2799,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       return {
         customGames,
         deletedGameIds: [...deletedGameIds],
+        deletedGameTimes,
         removedCustomGames,
         thumbnails: savedGameThumbnails || {},
         gameLinks: sharedGameLinks || {}
@@ -2809,16 +2835,19 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         if (!response.ok) throw new Error("Shared data could not be loaded");
         const result = await response.json();
         const state = result && result.state ? result.state : {
-          customGames: [], deletedGameIds: [], removedCustomGames: {}, thumbnails: {}, gameLinks: {}
+          customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {}
         };
         customGames.splice(0, customGames.length, ...(Array.isArray(state.customGames) ? state.customGames : []));
         deletedGameIds.clear();
         (Array.isArray(state.deletedGameIds) ? state.deletedGameIds : []).forEach(id => deletedGameIds.add(id));
         removedCustomGames = state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {};
+        deletedGameTimes = state.deletedGameTimes && typeof state.deletedGameTimes === "object" ? state.deletedGameTimes : {};
+        cleanupExpiredRestoreEntries();
         savedGameThumbnails = state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {};
         sharedGameLinks = state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {};
         localStorage.setItem(CUSTOM_GAMES_KEY, JSON.stringify(customGames));
         localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
+        localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
         localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedCustomGames));
         localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
         // Rebuild dynamic cards from the shared catalogue without touching original HTML cards.
@@ -2828,6 +2857,9 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         refreshThumbnailSelector();
         renderManagedGames();
         sharedDataReady = true;
+        if (hasGameManagementAccess() && sessionStorage.getItem(SHARED_CODE_KEY)) {
+          try { await saveSharedStateNow(); } catch (saveError) { console.warn("Could not save restore-bin cleanup:", saveError); }
+        }
       } catch (error) {
         console.warn("SpaceArcades is using its local fallback data:", error);
         sharedDataReady = true;
@@ -2976,6 +3008,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             let removedSnapshot = {};
             try { removedSnapshot = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}"); } catch {}
             deletedGameIds.add(game.key);
+            deletedGameTimes[game.key] = Date.now();
+            localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
             if (customCopy) {
               removedSnapshot[game.key] = customCopy;
               customGames.splice(customIndex, 1);
@@ -2993,6 +3027,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               if (currentGameKey === game.key) closeGame();
             } catch (error) {
               if (!previousDeleted) deletedGameIds.delete(game.key);
+              delete deletedGameTimes[game.key];
+              localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
               saveDeletedGames();
               if (customCopy && !customGames.some(item => item.id === game.key)) customGames.splice(Math.max(0, customIndex), 0, customCopy);
               localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedSnapshot));
@@ -3015,7 +3051,10 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         restoreHeading.textContent = "Removed games — restore";
         restoreHeading.style.marginTop = "18px";
         list.appendChild(restoreHeading);
-        const removed = [...deletedGameIds];
+        const removed = [...deletedGameIds].filter(key => {
+          const removedAt = Number(deletedGameTimes[key] || 0);
+          return removedAt > 0 && Date.now() - removedAt < RESTORE_WINDOW_MS;
+        });
         if (!removed.length) {
           const empty = document.createElement("p");
           empty.textContent = "No removed games.";
@@ -3045,6 +3084,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             try { saved = JSON.parse(savedText); } catch {}
             const restoredCustom = key.startsWith("custom-") ? saved[key] : null;
             deletedGameIds.delete(key);
+            delete deletedGameTimes[key];
+            localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
             if (restoredCustom && !customGames.some(item => item.id === key)) {
               customGames.push(restoredCustom);
               delete saved[key];
@@ -3057,6 +3098,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               location.reload();
             } catch (error) {
               deletedGameIds.add(key);
+              deletedGameTimes[key] = Date.now();
+              localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
               if (restoredCustom) {
                 const index = customGames.findIndex(item => item.id === key);
                 if (index >= 0) customGames.splice(index, 1);
