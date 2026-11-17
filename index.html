@@ -3205,13 +3205,20 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         );
         if (!game) return { ok: false, message: "I couldn't find that game. Check its exact name in the game list." };
         if (gameHasThumbnail(game)) return { ok: false, message: game.title + " already has a thumbnail, so I won't replace it." };
-        openAccessPanel(accessMode);
-        const selector = document.getElementById("thumbnailGameSelect");
-        selector.value = game.key;
-        if (selector.value !== game.key) return { ok: false, message: "That game isn't available in the missing-thumbnail list." };
-        document.getElementById("thumbnailStatus").textContent = "Choose an image for " + game.title + ".";
-        document.getElementById("thumbnailFileInput").click();
-        return { ok: true, message: "Choose an image for " + game.title + ". Then click Save thumbnail in the panel." };
+        const generated = makeAIGameThumbnail(game.title);
+        savedGameThumbnails[game.key] = generated;
+        try {
+          localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+          await saveSharedStateNow();
+          applySavedGameThumbnails();
+          refreshThumbnailSelector();
+          renderManagedGames();
+          return { ok: true, message: "🎨 Created and published a custom SpaceArcades thumbnail for " + game.title + "!" };
+        } catch (error) {
+          delete savedGameThumbnails[game.key];
+          try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); } catch {}
+          return { ok: false, message: "I couldn't publish the thumbnail: " + error.message };
+        }
       }
       return { ok:false, message:"I don't recognize that Space AI action yet." };
     };
