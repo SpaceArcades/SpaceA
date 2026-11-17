@@ -3590,6 +3590,15 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
     selectApp("magma");
 
+    // Every fresh visit (including a browser back/forward-cache restore)
+    // starts with the original SpaceArcades tab title and logo.
+    function restoreDefaultSiteIdentity() {
+      document.title = "SpaceArcades";
+      faviconLink.href = "SpaceArcades.png";
+    }
+    restoreDefaultSiteIdentity();
+    window.addEventListener("pageshow", restoreDefaultSiteIdentity);
+
   </script>
 
 <div id="spaceAIComingSoon" aria-label="Space AI coming soon">✦ SPACE AI — COMING SOON</div>
