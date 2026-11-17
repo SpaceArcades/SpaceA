@@ -3583,6 +3583,13 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    if(!text||send.disabled)return;
    input.value="";
    addMessage(text,"user");
+   const previousAssistantReply = [...history].reverse().find(message => message.role === "assistant")?.content || "";
+   if (/^(did you|did you\?|what\?|what happened\??|huh\??)$/i.test(text.trim()) && /published|created|thumbnail/i.test(previousAssistantReply)) {
+     const answer = "Yes. Space AI reported that it created and published a custom thumbnail for the game. It could not find a usable online image, so it used its own generated SpaceArcades artwork instead.";
+     addMessage(answer,"bot");
+     history.push({role:"user",content:text},{role:"assistant",content:answer});
+     return;
+   }
    const currentAccessMode = localStorage.getItem("spaceArcadesAccessModeV1");
    const isOwner = (currentAccessMode === "owner" || currentAccessMode === "coowner") && !!sessionStorage.getItem("spaceArcadesSharedWriteCodeV1");
    const urlMatch = text.match(/https?:\/\/[^\s<>"']+/i);
@@ -3674,6 +3681,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
      let diagnostic = error && error.message ? error.message : "Unknown browser error";
      if (error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(diagnostic)) {
        diagnostic = "The browser could not reach the Space AI server. This is usually a CORS, network, or Vercel deployment issue.\nAPI: https://space-gules-three.vercel.app/api/chat\nWebsite origin: " + window.location.origin + "\nCheck that this exact website origin is allowed in api/chat.js and that the latest Vercel deployment is Ready.";
+     } else if (/HTTP 429|free-models-per-day|Rate limit exceeded/i.test(diagnostic)) {
+       diagnostic = "Space AI's free AI-model quota has been used up for today. Your website and saved games are not broken. The chat model will work again when the provider resets the free limit, or you can add credits in OpenRouter and configure a paid model. Thumbnail and game-management actions that run directly on the website may still work.";
      } else {
        diagnostic = "Space AI server response: " + diagnostic;
      }
