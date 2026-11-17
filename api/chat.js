@@ -41,16 +41,16 @@ export default async function handler(req, res) {
         if (!searchResponse.ok) return [];
         const html = await searchResponse.text();
         const results = [];
-        const linkPattern = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\\s\\S]*?)<\\/a>/gi;
+        const linkPattern = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
         let match;
         while ((match = linkPattern.exec(html)) && results.length < 5) {
           let url = match[1].replace(/&amp;/g, "&");
           const redirect = url.match(/[?&]uddg=([^&]+)/);
           if (redirect) { try { url = decodeURIComponent(redirect[1]); } catch {} }
-          if (!/^https?:\\/\\//i.test(url)) continue;
+          if (!/^https?:\/\//i.test(url)) continue;
           const title = match[2].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").trim();
           const nearby = html.slice(match.index, match.index + 1800);
-          const snippetMatch = nearby.match(/class="result__snippet"[^>]*>([\\s\\S]*?)<\\/a>|class="result__snippet"[^>]*>([\\s\\S]*?)<\\/td>/i);
+          const snippetMatch = nearby.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>|class="result__snippet"[^>]*>([\s\S]*?)<\/td>/i);
           const snippet = (snippetMatch?.[1] || snippetMatch?.[2] || "").replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").trim();
           let embed = "";
           let image = "";
@@ -75,11 +75,11 @@ export default async function handler(req, res) {
 
     let webResults = [];
     const lastUserText = safeMessages.filter(message => message.role === "user").slice(-1)[0]?.content || "";
-    const wantsGameSearch = /\\b(add|find|search|look up|browse)\\b/i.test(lastUserText) && /\\b(game|embed|arcade)\\b/i.test(lastUserText) && !/https?:\\/\\//i.test(lastUserText);
+    const wantsGameSearch = /\b(add|find|search|look up|browse)\b/i.test(lastUserText) && /\b(game|embed|arcade)\b/i.test(lastUserText) && !/https?:\/\//i.test(lastUserText);
     if (wantsGameSearch) {
       const gameQuery = lastUserText
-        .replace(/https?:\\/\\/\\S+/gi, "")
-        .replace(/\\b(?:please|can you|could you|add|find|search|look up|browse|game|embed|url|link|to|the|arcade|for me|yourself)\\b/gi, " ")
+        .replace(/https?:\/\/\S+/gi, "")
+        .replace(/\b(?:please|can you|could you|add|find|search|look up|browse|game|embed|url|link|to|the|arcade|for me|yourself)\b/gi, " ")
         .replace(/[^a-z0-9 ]/gi, " ").trim();
       if (gameQuery) webResults = await searchForGame(gameQuery);
     }
