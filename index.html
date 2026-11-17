@@ -3640,7 +3640,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
      if (isOwner && /\b(add|create|publish|put)\b/i.test(text) && !/\bthumbnail\b/i.test(text) && !/https?:\/\//i.test(text) && Array.isArray(data.webResults)) {
        const found = data.webResults.find(item => item && item.embed && /^https?:\/\//i.test(item.embed));
        if (found) {
-         const title = String(found.title || text.replace(/\b(add|create|publish|put)\b/gi," ").trim()).replace(/\s+/g," ").slice(0,70);
+         const title = String(found.title || text.replace(/\b(add|create|publish|put)\b/gi," ").trim()).split(/\s[|–-]\s/)[0].replace(/\s+/g," ").slice(0,70);
          const added = await window.SpaceArcadesAIAction("add_game",{title,url:found.embed});
          addMessage(added.message,"bot");
          history.push({role:"assistant",content:added.message});
