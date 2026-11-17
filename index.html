@@ -3160,26 +3160,60 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       reader.onerror = () => { status.textContent = "Could not read that image file."; };
       reader.readAsDataURL(file);
     }
-    // Small bridge used by Space AI: it opens the existing thumbnail uploader,
-    // but the normal role checks and Save button still perform the actual change.
-    window.SpaceArcadesAIAction = function(action, gameName) {
-      if (action !== "add_thumbnail") return { ok: false, message: "I can only help add a missing thumbnail right now." };
-      if (!hasGameManagementAccess()) return { ok: false, message: "Owner or Co-Owner access is needed to add thumbnails." };
-      const wanted = String(gameName || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
-      const game = allGameEntries().find(item =>
-        [item.title, item.key, item.id].some(value =>
-          String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "") === wanted
-        )
-      );
-      if (!game) return { ok: false, message: "I couldn't find that game. Check its exact name in the game list." };
-      if (gameHasThumbnail(game)) return { ok: false, message: game.title + " already has a thumbnail, so I won't replace it." };
-      openAccessPanel(accessMode);
-      const selector = document.getElementById("thumbnailGameSelect");
-      selector.value = game.key;
-      if (selector.value !== game.key) return { ok: false, message: "That game isn't available in the missing-thumbnail list." };
-      document.getElementById("thumbnailStatus").textContent = "Choose an image for " + game.title + ".";
-      document.getElementById("thumbnailFileInput").click();
-      return { ok: true, message: "Choose an image for " + game.title + ". Then click Save thumbnail in the panel." };
+    // Space AI owner actions. The shared-state API validates the actual owner code on save.
+    function makeAIGameThumbnail(title) {
+      const safe = String(title).replace(/[&<>"]/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[ch]));
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#15133f"/><stop offset=".52" stop-color="#174d79"/><stop offset="1" stop-color="#9b3e9d"/></linearGradient><radialGradient id="r"><stop stop-color="#8ef7ff" stop-opacity=".8"/><stop offset="1" stop-color="#8ef7ff" stop-opacity="0"/></radialGradient></defs><rect width="640" height="360" fill="url(#g)"/><circle cx="510" cy="85" r="180" fill="url(#r)"/><circle cx="110" cy="300" r="145" fill="url(#r)" opacity=".45"/><g fill="#fff" opacity=".8"><circle cx="80" cy="70" r="3"/><circle cx="230" cy="45" r="2"/><circle cx="410" cy="275" r="3"/><circle cx="570" cy="210" r="2"/><circle cx="310" cy="120" r="2"/></g><path d="M0 292 Q160 240 320 292 T640 275 V360 H0Z" fill="#080d26" opacity=".55"/><text x="320" y="177" text-anchor="middle" font-family="Arial,sans-serif" font-size="42" font-weight="800" fill="#fff" stroke="#10152e" stroke-width="2" paint-order="stroke" textLength="550" lengthAdjust="spacingAndGlyphs">' + safe + '</text><text x="320" y="225" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" letter-spacing="6" fill="#c5f8ff">SPACEARCADES</text></svg>';
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    }
+    window.SpaceArcadesAIAction = async function(action, payload) {
+      if (action === "owner_stats") {
+        if (accessMode !== "owner" || !sessionStorage.getItem(SHARED_CODE_KEY)) return { ok:false, message:"Owner access is required for live site statistics." };
+        const online = document.getElementById("onlineCount")?.textContent || "—";
+        const views = document.getElementById("totalViews")?.textContent || "—";
+        return { ok:true, message:"📊 Live SpaceArcades stats: " + online + " visitors online right now, and " + views + " total views. Stats refresh automatically about every 30 seconds." };
+      }
+      if (action === "add_game") {
+        if (accessMode !== "owner" || !sessionStorage.getItem(SHARED_CODE_KEY)) return { ok:false, message:"Only the Owner can add games through Space AI. Enter the Owner code first." };
+        const title = String(payload?.title || "").trim().slice(0,70);
+        const url = safeGameUrl(String(payload?.url || ""));
+        if (!title || !url) return { ok:false, message:"I need a game name and a valid http/https embed URL. Example: Add game Neon Racer — https://example.com/embed." };
+        if (allGameEntries().some(game => game.title.toLowerCase() === title.toLowerCase())) return { ok:false, message:'A game named "' + title + '" is already in the Arcade.' };
+        const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7);
+        const game = { id, title, url, image: makeAIGameThumbnail(title) };
+        customGames.push(game);
+        try {
+          await saveSharedStateNow();
+          appendGameCard(game,id);
+          renderManagedGames();
+          return { ok:true, message:'🚀 Added "' + title + '" to the Arcade! I also created a matching SpaceArcades thumbnail.' };
+        } catch (error) {
+          const index = customGames.findIndex(item => item.id === id);
+          if (index >= 0) customGames.splice(index,1);
+          try { await saveSharedStateNow(); } catch {}
+          return { ok:false, message:"I couldn't publish the game: " + error.message };
+        }
+      }
+      if (action === "add_thumbnail") {
+        if (!hasGameManagementAccess()) return { ok: false, message: "Owner or Co-Owner access is needed to add thumbnails." };
+        const gameName = payload;
+        const wanted = String(gameName || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+        const game = allGameEntries().find(item =>
+          [item.title, item.key, item.id].some(value =>
+            String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "") === wanted
+          )
+        );
+        if (!game) return { ok: false, message: "I couldn't find that game. Check its exact name in the game list." };
+        if (gameHasThumbnail(game)) return { ok: false, message: game.title + " already has a thumbnail, so I won't replace it." };
+        openAccessPanel(accessMode);
+        const selector = document.getElementById("thumbnailGameSelect");
+        selector.value = game.key;
+        if (selector.value !== game.key) return { ok: false, message: "That game isn't available in the missing-thumbnail list." };
+        document.getElementById("thumbnailStatus").textContent = "Choose an image for " + game.title + ".";
+        document.getElementById("thumbnailFileInput").click();
+        return { ok: true, message: "Choose an image for " + game.title + ". Then click Save thumbnail in the panel." };
+      }
+      return { ok:false, message:"I don't recognize that Space AI action yet." };
     };
     document.getElementById("saveGameThumbnailBtn").addEventListener("click", () => {
       const file = document.getElementById("thumbnailFileInput").files[0];
@@ -3539,9 +3573,36 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    if(!text||send.disabled)return;
    input.value="";
    addMessage(text,"user");
+   const isOwner = localStorage.getItem("spaceArcadesAccessModeV1") === "owner" && !!sessionStorage.getItem("spaceArcadesSharedWriteCodeV1");
+   const urlMatch = text.match(/https?:\\/\\/[^\\s<>"']+/i);
+   const asksForStats = /\\b(views?|visitors?|online|how many people|site stats|statistics)\\b/i.test(text);
+   const asksToAddGame = /\\b(add|create|publish|put)\\b/i.test(text) && /\\b(game|arcade)\\b/i.test(text) && urlMatch;
+   if (isOwner && asksForStats && window.SpaceArcadesAIAction) {
+     send.disabled=true;send.textContent="…";
+     try {
+       const result = await window.SpaceArcadesAIAction("owner_stats");
+       addMessage(result.message,"bot");
+       history.push({role:"user",content:text},{role:"assistant",content:result.message});
+     } finally { send.disabled=false;send.textContent="Send";input.focus(); }
+     return;
+   }
+   if (isOwner && asksToAddGame && window.SpaceArcadesAIAction) {
+     const url = urlMatch[0].replace(/[),.!?]+$/, "");
+     let title = text.replace(urlMatch[0]," ");
+     const explicit = title.match(/\\b(?:name|called|titled)\\s*[:=]?\\s*["']?(.+?)["']?\\s*(?=\\b(?:embed|url|link)\\b|$)/i);
+     if (explicit) title = explicit[1];
+     title = title.replace(/\\b(?:please|can you|could you|add|create|publish|put|game|to|the|arcade|with|using|embed|url|link|name|called|titled)\\b/gi," ").replace(/[—–,:;'"!?]+/g," ").trim().replace(/\\s+/g," ");
+     send.disabled=true;send.textContent="…";
+     try {
+       const result = await window.SpaceArcadesAIAction("add_game",{title,url});
+       addMessage(result.message,"bot");
+       history.push({role:"user",content:text},{role:"assistant",content:result.message});
+     } finally { send.disabled=false;send.textContent="Send";input.focus(); }
+     return;
+   }
    const thumbnailRequest = text.match(/(?:add|set|upload|change)\s+(?:a\s+)?(?:game\s+)?thumbnail\s+(?:for\s+)?(.+)/i);
    if (thumbnailRequest && window.SpaceArcadesAIAction) {
-     const actionResult = window.SpaceArcadesAIAction("add_thumbnail", thumbnailRequest[1].replace(/[.!?]+$/, "").trim());
+     const actionResult = await window.SpaceArcadesAIAction("add_thumbnail", thumbnailRequest[1].replace(/[.!?]+$/, "").trim());
      addMessage(actionResult.message, "bot");
      history.push({role:"assistant",content:actionResult.message});
      return;
