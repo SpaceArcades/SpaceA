@@ -1482,7 +1482,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
             <div>
 
-              <div class="app-name" data-name="docs">Docs</div>
+              <div class="app-name" data-name="docs">Google Docs</div>
 
               <div class="app-desc">Google Docs shortcut</div>
 
@@ -1500,7 +1500,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
             <div>
 
-              <div class="app-name" data-name="classroom">Classroom</div>
+              <div class="app-name" data-name="classroom">Google Classroom</div>
 
               <div class="app-desc">Google Classroom</div>
 
@@ -2117,7 +2117,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
       docs: { id: "docs", name: "Google Docs", icon: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Google_Docs_Logo_05.2026.png" },
 
-      classroom: { id: "classroom", name: "Classroom", icon: "https://www.notredameheusy.be/gsuite/google/Google%20Workspace%20for%20Education%20Product%20Icons/Classroom/PNG/Classroom_Product_Icon_512dp%402x.png" }
+      classroom: { id: "classroom", name: "Google Classroom", icon: "https://www.notredameheusy.be/gsuite/google/Google%20Workspace%20for%20Education%20Product%20Icons/Classroom/PNG/Classroom_Product_Icon_512dp%402x.png" }
 
     };
 
@@ -2148,8 +2148,10 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     try {
       const savedShortcutNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
       Object.keys(apps).forEach(id => {
-        if (savedShortcutNames[id] && typeof savedShortcutNames[id] === "string") apps[id].name = savedShortcutNames[id];
+        if (savedShortcutNames[id] && typeof savedShortcutNames[id] === "string" && !/titan\s*arcades/i.test(savedShortcutNames[id])) apps[id].name = savedShortcutNames[id];
+        else if (/titan\s*arcades/i.test(String(savedShortcutNames[id] || ""))) delete savedShortcutNames[id];
       });
+      localStorage.setItem(SHORTCUT_NAMES_KEY, JSON.stringify(savedShortcutNames));
     } catch (error) { console.warn("Could not load saved shortcut names:", error); }
 
     let selectedId = "magma";
