@@ -2758,7 +2758,11 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
     function saveDeletedGames() {
       localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
-      queueSharedSave();
+    }
+
+    async function persistGameManagementChanges() {
+      clearTimeout(sharedSaveTimer);
+      await saveSharedStateNow();
     }
 
 
@@ -2962,24 +2966,44 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           remove.type = "button";
           remove.className = "delete-game-btn";
           remove.textContent = "Remove";
-          remove.addEventListener("click", () => {
+          remove.addEventListener("click", async () => {
             if (!confirm('Remove "' + game.title + '" from Arcade? You can restore it later.')) return;
+            remove.disabled = true;
+            remove.textContent = "Saving…";
+            const previousDeleted = deletedGameIds.has(game.key);
+            const customIndex = game.custom ? customGames.findIndex(item => item.id === game.key) : -1;
+            const customCopy = customIndex >= 0 ? { ...customGames[customIndex] } : null;
+            let removedSnapshot = {};
+            try { removedSnapshot = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}"); } catch {}
             deletedGameIds.add(game.key);
-            saveDeletedGames();
-            if (game.custom) {
-              const idx = customGames.findIndex(item => item.id === game.key);
-              if (idx >= 0) {
-                const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
-                saved[game.key] = customGames[idx];
-                localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved));
-                customGames.splice(idx, 1);
-                saveCustomGames();
-              }
+            if (customCopy) {
+              removedSnapshot[game.key] = customCopy;
+              customGames.splice(customIndex, 1);
+              localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedSnapshot));
+              if (!saveCustomGames()) throw new Error("Could not update the local game list.");
             }
-            const card = document.getElementById(existingCardId(game.key));
-            if (card) card.remove();
-            renderManagedGames();
-            if (currentGameKey === game.key) closeGame();
+            saveDeletedGames();
+            try {
+              await persistGameManagementChanges();
+              const card = document.getElementById(existingCardId(game.key));
+              if (card) card.remove();
+              const customCard = document.getElementById("custom-card-" + game.key);
+              if (customCard) customCard.remove();
+              renderManagedGames();
+              if (currentGameKey === game.key) closeGame();
+            } catch (error) {
+              if (!previousDeleted) deletedGameIds.delete(game.key);
+              saveDeletedGames();
+              if (customCopy && !customGames.some(item => item.id === game.key)) customGames.splice(Math.max(0, customIndex), 0, customCopy);
+              localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedSnapshot));
+              if (customCopy) saveCustomGames();
+              renderGameCatalog();
+              renderManagedGames();
+              alert("The game was not removed because the shared save failed: " + error.message + ". Please try again.");
+            } finally {
+              remove.disabled = false;
+              remove.textContent = "Remove";
+            }
           });
           row.appendChild(remove);
         }
@@ -3013,19 +3037,37 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           restore.type = "button";
           restore.className = "primary-btn";
           restore.textContent = "Restore";
-          restore.addEventListener("click", () => {
+          restore.addEventListener("click", async () => {
+            restore.disabled = true;
+            restore.textContent = "Restoring…";
+            const savedText = localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}";
+            let saved = {};
+            try { saved = JSON.parse(savedText); } catch {}
+            const restoredCustom = key.startsWith("custom-") ? saved[key] : null;
             deletedGameIds.delete(key);
+            if (restoredCustom && !customGames.some(item => item.id === key)) {
+              customGames.push(restoredCustom);
+              delete saved[key];
+              localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved));
+              saveCustomGames();
+            }
             saveDeletedGames();
-            if (key.startsWith("custom-")) {
-              const saved = JSON.parse(localStorage.getItem("spaceArcadesRemovedCustomGamesV1") || "{}");
-              if (saved[key]) {
-                customGames.push(saved[key]);
-                delete saved[key];
-                localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(saved));
+            try {
+              await persistGameManagementChanges();
+              location.reload();
+            } catch (error) {
+              deletedGameIds.add(key);
+              if (restoredCustom) {
+                const index = customGames.findIndex(item => item.id === key);
+                if (index >= 0) customGames.splice(index, 1);
+                localStorage.setItem("spaceArcadesRemovedCustomGamesV1", savedText);
                 saveCustomGames();
               }
+              saveDeletedGames();
+              restore.disabled = false;
+              restore.textContent = "Restore";
+              alert("The game could not be restored because the shared save failed: " + error.message + ". Please try again.");
             }
-            location.reload();
           });
           row.append(name, restore);
           list.appendChild(row);
