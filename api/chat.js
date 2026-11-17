@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
     let webResults = [];
     const lastUserText = safeMessages.filter(message => message.role === "user").slice(-1)[0]?.content || "";
-    const wantsGameSearch = /\b(add|find|search|look up|browse)\b/i.test(lastUserText) && /\b(game|embed|arcade)\b/i.test(lastUserText) && !/https?:\/\//i.test(lastUserText);
+    const wantsGameSearch = /\b(add|find|search|look up|browse)\b/i.test(lastUserText) && !/\bthumbnail\b/i.test(lastUserText) && !/https?:\/\//i.test(lastUserText);
     if (wantsGameSearch) {
       const gameQuery = lastUserText
         .replace(/https?:\/\/\S+/gi, "")
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
           result = await askOpenRouter(attempt.model, 2400);
         }
         if (result.response.ok && result.reply) {
-          return res.status(200).json({ reply: result.reply });
+          return res.status(200).json({ reply: result.reply, webResults });
         }
         const rawError = result.data?.error;
         const providerMessage = String(
