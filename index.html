@@ -1448,7 +1448,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
           </div>
 
-          <span class="count">3 apps</span>
+          <span class="count">4 apps</span>
 
         </div>
 
@@ -1506,6 +1506,16 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
             </div>
 
+          </button>
+
+          <button class="app-card" type="button" data-id="spacearcades" aria-pressed="false">
+            <div class="app-icon">
+              <img src="SpaceArcades.png" alt="SpaceArcades">
+            </div>
+            <div>
+              <div class="app-name" data-name="spacearcades">SpaceArcades</div>
+              <div class="app-desc">SpaceArcades original tab identity</div>
+            </div>
           </button>
 
         </div>
@@ -2118,7 +2128,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
       docs: { id: "docs", name: "Google Docs", icon: "google-docs-transparent.png" },
 
-      classroom: { id: "classroom", name: "Google Classroom", icon: "google-classroom-transparent.png" }
+      classroom: { id: "classroom", name: "Google Classroom", icon: "google-classroom-transparent.png" },
+      spacearcades: { id: "spacearcades", name: "SpaceArcades", icon: "SpaceArcades.png" }
 
     };
 
@@ -2146,7 +2157,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     };
 
     const SHORTCUT_NAMES_KEY = "spaceArcadesShortcutNamesV1";
-    const ORIGINAL_APP_NAMES = { magma: "Magma", docs: "Google Docs", classroom: "Google Classroom" };
+    const ORIGINAL_APP_NAMES = { magma: "Magma", docs: "Google Docs", classroom: "Google Classroom", spacearcades: "SpaceArcades" };
     try {
       const savedShortcutNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
       Object.keys(apps).forEach(id => {
@@ -2241,27 +2252,21 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     document.getElementById("saveBtn").addEventListener("click", saveChanges);
 
     document.getElementById("revertBtn").addEventListener("click", () => {
-      const originalName = ORIGINAL_APP_NAMES[selectedId];
-      if (!originalName || !apps[selectedId]) return;
-
-      apps[selectedId].name = originalName;
-      try {
-        const savedNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
-        delete savedNames[selectedId];
-        localStorage.setItem(SHORTCUT_NAMES_KEY, JSON.stringify(savedNames));
-      } catch (error) {
-        status.textContent = "Could not revert the saved shortcut name.";
-        return;
-      }
-
+      const originalName = "SpaceArcades";
+      try { localStorage.removeItem(SHORTCUT_NAMES_KEY); }
+      catch (error) { status.textContent = "Could not revert the saved tab settings."; return; }
+      Object.keys(ORIGINAL_APP_NAMES).forEach(id => { apps[id].name = ORIGINAL_APP_NAMES[id]; });
+      document.querySelectorAll(".app-card").forEach(card => {
+        const id = card.dataset.id;
+        const label = card.querySelector(".app-name");
+        if (label && apps[id]) label.textContent = ORIGINAL_APP_NAMES[id];
+      });
       appNameInput.value = originalName;
-      const cardName = document.querySelector('[data-id="' + selectedId + '"] .app-name');
-      if (cardName) cardName.textContent = originalName;
       document.getElementById("previewName").textContent = originalName;
-      document.getElementById("previewIcon").querySelector("img").src = apps[selectedId].icon;
+      document.getElementById("previewIcon").querySelector("img").src = "SpaceArcades.png";
       document.title = originalName;
-      faviconLink.href = apps[selectedId].icon;
-      status.textContent = "Restored original name and icon.";
+      faviconLink.href = "SpaceArcades.png";
+      status.textContent = "Reverted to the original SpaceArcades name and logo."; 
     });
 
     /* NAVIGATION TABS */
