@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       return "";
     };
 
-    async function askOpenRouter(modelToUse) {
+    async function askOpenRouter(modelToUse, tokenLimit = 1200) {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
           model: modelToUse,
           messages: requestMessages,
           temperature: 0.8,
-          max_tokens: 350
+          max_tokens: tokenLimit
         })
       });
       const data = await response.json().catch(() => ({}));
@@ -83,7 +83,13 @@ export default async function handler(req, res) {
     for (const attempt of attempts) {
       if (attempt.delay) await new Promise(resolve => setTimeout(resolve, attempt.delay));
       try {
-        const result = await askOpenRouter(attempt.model);
+        let result = await askOpenRouter(attempt.model);
+        // A finish_reason of "length" means the model exhausted its output budget.
+        // Retry once with a larger budget instead of treating the empty text as a normal failure.
+        if (result.response.ok && !result.reply && result.data?.choices?.[0]?.finish_reason === "length") {
+          console.warn("Space AI completion hit its token limit; retrying with a larger output budget.");
+          result = await askOpenRouter(attempt.model, 2400);
+        }
         if (result.response.ok && result.reply) {
           return res.status(200).json({ reply: result.reply });
         }
