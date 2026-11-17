@@ -11,7 +11,7 @@
 
   <title>SpaceArcades</title>
 
-  <link id="favicon" rel="icon" type="image/png" href="icon.png">
+  <link id="favicon" rel="icon" type="image/png" href="SpaceArcades.png">
 
   <style>
 
@@ -1525,6 +1525,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               <input id="appName" type="text" maxlength="48" value="Magma">
 
               <button class="primary-btn" id="saveBtn" type="button">Save</button>
+              <button class="secondary-btn" id="revertBtn" type="button">Revert to original</button>
 
             </div>
 
@@ -2145,6 +2146,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     };
 
     const SHORTCUT_NAMES_KEY = "spaceArcadesShortcutNamesV1";
+    const ORIGINAL_APP_NAMES = { magma: "Magma", docs: "Google Docs", classroom: "Google Classroom" };
     try {
       const savedShortcutNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
       Object.keys(apps).forEach(id => {
@@ -2155,6 +2157,11 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     } catch (error) { console.warn("Could not load saved shortcut names:", error); }
 
     let selectedId = "magma";
+
+    // Always start the browser tab with the SpaceArcades identity.
+    document.title = "SpaceArcades";
+    const faviconLink = document.getElementById("favicon");
+    faviconLink.href = "SpaceArcades.png";
 
     const appNameInput = document.getElementById("appName");
 
@@ -2219,6 +2226,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       if (cardTitle) cardTitle.textContent = newName;
 
       document.title = newName;
+      faviconLink.href = apps[selectedId].icon;
 
       document.getElementById("previewName").textContent = newName;
 
@@ -2233,6 +2241,30 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     });
 
     document.getElementById("saveBtn").addEventListener("click", saveChanges);
+
+    document.getElementById("revertBtn").addEventListener("click", () => {
+      const originalName = ORIGINAL_APP_NAMES[selectedId];
+      if (!originalName || !apps[selectedId]) return;
+
+      apps[selectedId].name = originalName;
+      try {
+        const savedNames = JSON.parse(localStorage.getItem(SHORTCUT_NAMES_KEY) || "{}");
+        delete savedNames[selectedId];
+        localStorage.setItem(SHORTCUT_NAMES_KEY, JSON.stringify(savedNames));
+      } catch (error) {
+        status.textContent = "Could not revert the saved shortcut name.";
+        return;
+      }
+
+      appNameInput.value = originalName;
+      const cardName = document.querySelector('[data-id="' + selectedId + '"] .app-name');
+      if (cardName) cardName.textContent = originalName;
+      document.getElementById("previewName").textContent = originalName;
+      document.getElementById("previewIcon").querySelector("img").src = apps[selectedId].icon;
+      document.title = originalName;
+      faviconLink.href = apps[selectedId].icon;
+      status.textContent = "Restored original name and icon.";
+    });
 
     /* NAVIGATION TABS */
 
