@@ -3574,9 +3574,9 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    input.value="";
    addMessage(text,"user");
    const isOwner = localStorage.getItem("spaceArcadesAccessModeV1") === "owner" && !!sessionStorage.getItem("spaceArcadesSharedWriteCodeV1");
-   const urlMatch = text.match(/https?:\\/\\/[^\\s<>"']+/i);
-   const asksForStats = /\\b(views?|visitors?|online|how many people|site stats|statistics)\\b/i.test(text);
-   const asksToAddGame = /\\b(add|create|publish|put)\\b/i.test(text) && /\\b(game|arcade)\\b/i.test(text) && urlMatch;
+   const urlMatch = text.match(/https?:\/\/[^\s<>"']+/i);
+   const asksForStats = /\b(views?|visitors?|online|how many people|site stats|statistics)\b/i.test(text);
+   const asksToAddGame = /\b(add|create|publish|put)\b/i.test(text) && /\b(game|arcade)\b/i.test(text) && urlMatch;
    if (isOwner && asksForStats && window.SpaceArcadesAIAction) {
      send.disabled=true;send.textContent="…";
      try {
@@ -3589,9 +3589,9 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
    if (isOwner && asksToAddGame && window.SpaceArcadesAIAction) {
      const url = urlMatch[0].replace(/[),.!?]+$/, "");
      let title = text.replace(urlMatch[0]," ");
-     const explicit = title.match(/\\b(?:name|called|titled)\\s*[:=]?\\s*["']?(.+?)["']?\\s*(?=\\b(?:embed|url|link)\\b|$)/i);
+     const explicit = title.match(/\b(?:name|called|titled)\s*[:=]?\s*["']?(.+?)["']?\s*(?=\b(?:embed|url|link)\b|$)/i);
      if (explicit) title = explicit[1];
-     title = title.replace(/\\b(?:please|can you|could you|add|create|publish|put|game|to|the|arcade|with|using|embed|url|link|name|called|titled)\\b/gi," ").replace(/[—–,:;'"!?]+/g," ").trim().replace(/\\s+/g," ");
+     title = title.replace(/\b(?:please|can you|could you|add|create|publish|put|game|to|the|arcade|with|using|embed|url|link|name|called|titled)\b/gi," ").replace(/[—–,:;'"!?]+/g," ").trim().replace(/\s+/g," ");
      send.disabled=true;send.textContent="…";
      try {
        const result = await window.SpaceArcadesAIAction("add_game",{title,url});
