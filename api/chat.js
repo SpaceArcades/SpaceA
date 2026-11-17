@@ -34,9 +34,10 @@ export default async function handler(req, res) {
 
     if (!safeMessages.length) return res.status(400).json({ error: "Message cannot be empty." });
 
-    async function searchForGame(query) {
+    async function searchForGame(query, mode = "game") {
       try {
-        const searchUrl = "https://html.duckduckgo.com/html/?q=" + encodeURIComponent(query + " playable game embed iframe");
+        const suffix = mode === "image" ? " official game artwork cover thumbnail" : " playable game embed iframe";
+        const searchUrl = "https://html.duckduckgo.com/html/?q=" + encodeURIComponent(query + suffix);
         const searchResponse = await fetch(searchUrl, { headers: { "User-Agent": "Mozilla/5.0 SpaceArcadesBot/1.0" } });
         if (!searchResponse.ok) return [];
         const html = await searchResponse.text();
@@ -75,13 +76,14 @@ export default async function handler(req, res) {
 
     let webResults = [];
     const lastUserText = safeMessages.filter(message => message.role === "user").slice(-1)[0]?.content || "";
-    const wantsGameSearch = /\b(add|find|search|look up|browse)\b/i.test(lastUserText) && !/\bthumbnail\b/i.test(lastUserText) && !/https?:\/\//i.test(lastUserText);
-    if (wantsGameSearch) {
+    const wantsThumbnailSearch = /\bthumbnail\b/i.test(lastUserText) && /\b(?:add|set|make|create|find|get|upload|change)\b/i.test(lastUserText);
+    const wantsGameSearch = /\b(add|find|search|look up|browse)\b/i.test(lastUserText) && !wantsThumbnailSearch && !/https?:\/\//i.test(lastUserText);
+    if (wantsThumbnailSearch || wantsGameSearch) {
       const gameQuery = lastUserText
         .replace(/https?:\/\/\S+/gi, "")
-        .replace(/\b(?:please|can you|could you|add|find|search|look up|browse|game|embed|url|link|to|the|arcade|for me|yourself)\b/gi, " ")
+        .replace(/\b(?:please|can you|could you|add|set|make|create|find|get|upload|change|search|look up|browse|game|thumbnail|image|picture|good|great|nice|custom|new|official|artwork|cover|embed|url|link|to|the|arcade|for me|yourself|a|an|of)\b/gi, " ")
         .replace(/[^a-z0-9 ]/gi, " ").trim();
-      if (gameQuery) webResults = await searchForGame(gameQuery);
+      if (gameQuery) webResults = await searchForGame(gameQuery, wantsThumbnailSearch ? "image" : "game");
     }
 
     const requestMessages = [
