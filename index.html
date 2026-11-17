@@ -2880,6 +2880,15 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       if (document.visibilityState === "visible") refreshSharedState();
     });
 
+    // Expire restore-bin entries even if the management page stays open.
+    window.setInterval(() => {
+      if (!sharedDataReady || !cleanupExpiredRestoreEntries()) return;
+      renderManagedGames();
+      if (hasGameManagementAccess() && sessionStorage.getItem(SHARED_CODE_KEY)) {
+        saveSharedStateNow().catch(error => console.warn("Restore-bin expiry save failed:", error));
+      }
+    }, 60 * 1000);
+
     function existingCardId(gameKey) {
       const ids = {
         slope: "slopeGameCard", spaceWaves: "spaceWavesGameCard",
@@ -3003,6 +3012,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             remove.disabled = true;
             remove.textContent = "Saving…";
             const previousDeleted = deletedGameIds.has(game.key);
+            const previousRemovedAt = deletedGameTimes[game.key];
             const customIndex = game.custom ? customGames.findIndex(item => item.id === game.key) : -1;
             const customCopy = customIndex >= 0 ? { ...customGames[customIndex] } : null;
             let removedSnapshot = {};
@@ -3010,14 +3020,14 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             deletedGameIds.add(game.key);
             deletedGameTimes[game.key] = Date.now();
             localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
-            if (customCopy) {
-              removedSnapshot[game.key] = customCopy;
-              customGames.splice(customIndex, 1);
-              localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedSnapshot));
-              if (!saveCustomGames()) throw new Error("Could not update the local game list.");
-            }
-            saveDeletedGames();
             try {
+              if (customCopy) {
+                removedSnapshot[game.key] = customCopy;
+                customGames.splice(customIndex, 1);
+                localStorage.setItem("spaceArcadesRemovedCustomGamesV1", JSON.stringify(removedSnapshot));
+                if (!saveCustomGames()) throw new Error("Could not update the local game list.");
+              }
+              saveDeletedGames();
               await persistGameManagementChanges();
               const card = document.getElementById(existingCardId(game.key));
               if (card) card.remove();
@@ -3027,7 +3037,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               if (currentGameKey === game.key) closeGame();
             } catch (error) {
               if (!previousDeleted) deletedGameIds.delete(game.key);
-              delete deletedGameTimes[game.key];
+              if (previousRemovedAt) deletedGameTimes[game.key] = previousRemovedAt;
+              else delete deletedGameTimes[game.key];
               localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
               saveDeletedGames();
               if (customCopy && !customGames.some(item => item.id === game.key)) customGames.splice(Math.max(0, customIndex), 0, customCopy);
