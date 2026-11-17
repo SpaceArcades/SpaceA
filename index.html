@@ -1361,13 +1361,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
   h1 {font-size:2.25rem}
 }
 
-
-    #spaceArcadesUpdateScreen{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#030305;color:#fff;font-family:inherit;text-align:center;padding:24px}
-    #spaceArcadesUpdateScreen img{width:76px;height:76px;object-fit:contain}
-    #spaceArcadesUpdateScreen strong{font-size:clamp(1.2rem,4vw,1.8rem);font-weight:800}
-    #spaceArcadesUpdateScreen span{color:#94a3b8;font-size:.9rem}
-    #spaceArcadesUpdateScreen .update-spinner{width:25px;height:25px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spaceArcadesSpin .8s linear infinite}
-    @keyframes spaceArcadesSpin{to{transform:rotate(360deg)}}
 </style>
 
 </head>
@@ -3589,32 +3582,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         } catch (error) { console.warn("SpaceArcades stats unavailable:", error); }
       }
     
-<div id="spaceArcadesUpdateScreen" role="status" aria-live="polite">
-  <img src="SpaceArcades.png" alt="SpaceArcades">
-  <strong>Updating SpaceArcades…</strong>
-  <div class="update-spinner" aria-hidden="true"></div>
-  <span>Refreshing the latest version</span>
-</div>
-<script>
-(function () {
-  var updateVersion = "spacearcades-one-time-refresh-2026-11-17-v1";
-  var storageKey = "spaceArcadesSeenUpdate";
-  try {
-    if (localStorage.getItem(storageKey) === updateVersion) return;
-    localStorage.setItem(storageKey, updateVersion);
-    var screen = document.getElementById("spaceArcadesUpdateScreen");
-    if (screen) screen.style.display = "flex";
-    window.setTimeout(function () {
-      var url = new URL(window.location.href);
-      url.searchParams.set("sa_refresh", updateVersion);
-      window.location.replace(url.toString());
-    }, 1100);
-  } catch (error) {
-    // If browser storage is blocked, do not trap the visitor in a reload loop.
-    console.warn("SpaceArcades one-time update screen unavailable:", error);
-  }
-})();
-</script>
   updateStats(firstView);
       window.setInterval(() => updateStats(false), 30000);
       document.addEventListener("visibilitychange", () => {
