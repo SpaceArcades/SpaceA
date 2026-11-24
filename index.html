@@ -3101,6 +3101,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               }
               await saveSharedStateNow();
               renderManagedGames();
+              const editedCustomCard = document.getElementById("custom-card-" + game.key);
+              if (editedCustomCard) editedCustomCard.remove();
               renderGameCatalog();
               applySavedGameThumbnails();
               refreshThumbnailSelector();
