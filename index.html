@@ -1718,6 +1718,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
           </div>
 
+          <p id="gameCreatorLine" class="hidden" style="color:var(--muted);font-size:.85rem;margin:-4px 0 12px"></p>
           <div class="game-player-frame" id="gamePlayerFrame"></div>
 
         </div>
@@ -1844,6 +1845,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             <input id="newGameTitle" type="text" maxlength="70" placeholder="e.g. My new game" required>
             <label class="field-label" for="newGameUrl">Game link</label>
             <input id="newGameUrl" type="text" inputmode="url" placeholder="https://example.com/game" required>
+            <label class="field-label" for="newGameCreator">Created by</label>
+            <input id="newGameCreator" type="text" maxlength="60" placeholder="Enter the creator's name" required>
             <div class="translator-actions">
               <button class="primary-btn" type="submit">Add game to Arcade</button>
               <span class="status" id="adminGameStatus" role="status" aria-live="polite"></span>
@@ -2370,6 +2373,14 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       if (sharedGameLinks[gameKey]) game.url = sharedGameLinks[gameKey];
 
       gamePlayerTitle.textContent = game.title;
+      const creatorLine = document.getElementById("gameCreatorLine");
+      if (game.custom || customGames.some(item => item.id === gameKey)) {
+        creatorLine.textContent = "Created by: " + (game.creator || "Creator not listed");
+        creatorLine.classList.remove("hidden");
+      } else {
+        creatorLine.textContent = "";
+        creatorLine.classList.add("hidden");
+      }
       document.getElementById('gameOpenTabBtn').classList.remove('hidden');
       document.getElementById('gameFullscreenBtn').classList.remove('hidden');
       document.getElementById('gameRefreshBtn').classList.remove('hidden');
@@ -3076,10 +3087,11 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             }
           });
           row.appendChild(editLink);
+        }
 
-          // Admins/co-owners may remove only games that were added through
-          // the custom-game form. Built-in and preconfigured arcade games stay protected.
-          if (game.custom) {
+        // Admins, co-owners, and owners may remove custom-added games only.
+        // Built-in and preconfigured arcade games remain protected.
+        if (game.custom && (accessMode === "admin" || hasGameManagementAccess())) {
           const remove = document.createElement("button");
           remove.type = "button";
           remove.className = "delete-game-btn";
@@ -3130,7 +3142,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             }
           });
           row.appendChild(remove);
-          }
         }
         list.appendChild(row);
       });
@@ -3420,7 +3431,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       document.getElementById("accessPanelDescription").textContent =
         fullAccess
           ? `${mode === "owner" ? "Owner" : "Co-Owner"} access: add games, remove games, and restore removed games. Access stays active after reloading.`
-          : "Admin access: add games. Add your own thumbnail image files to the website folder yourself.";
+          : "Admin access: add games and remove custom-added games. Owners and co-owners can restore removed games. Add your own thumbnail image files to the website folder yourself.";
       renderManagedGames();
       applySavedGameThumbnails();
       refreshThumbnailSelector();
@@ -3525,15 +3536,16 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       event.preventDefault();
       const title = document.getElementById("newGameTitle").value.trim();
       const url = safeGameUrl(document.getElementById("newGameUrl").value);
+      const creator = document.getElementById("newGameCreator").value.trim();
       const status = document.getElementById("adminGameStatus");
-      if (!title || !url) {
-        status.textContent = "Enter a game name and a valid http/https link.";
+      if (!title || !url || !creator) {
+        status.textContent = "Enter a game name, creator name, and a valid http/https link.";
         return;
       }
 
       const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
       // No thumbnail uploader or auto-generated thumbnail: the site owner adds image files manually.
-      customGames.push({ id, title, url, image: "" });
+      customGames.push({ id, title, url, creator, image: "" });
       if (!saveCustomGames()) {
         customGames.pop();
         status.textContent = "Could not save this game in this browser.";
