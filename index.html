@@ -2714,13 +2714,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     const CUSTOM_GAMES_KEY = "spaceArcadesCustomGamesV1";
     const customGames = loadCustomGames();
     const ACCESS_MODE_KEY = "spaceArcadesAccessModeV1";
-    const ADMIN_OWNER_ID_KEY = "spaceArcadesAdminOwnerIdV1";
-    let adminOwnerId = localStorage.getItem(ADMIN_OWNER_ID_KEY);
-    if (!adminOwnerId) {
-      adminOwnerId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
-        ("admin-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2));
-      localStorage.setItem(ADMIN_OWNER_ID_KEY, adminOwnerId);
-    }
     let accessMode = localStorage.getItem(ACCESS_MODE_KEY);
     if (!["admin", "coowner", "owner"].includes(accessMode)) accessMode = null;
     const hasGameManagementAccess = () => accessMode === "coowner" || accessMode === "owner";
@@ -2907,7 +2900,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       const response = await fetch(SHARED_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save", role, code, adminOwnerId: accessMode === "admin" ? adminOwnerId : "", state: sharedSnapshot() })
+        body: JSON.stringify({ action: "save", role, code, adminCreator: accessMode === "admin" ? (localStorage.getItem("spaceArcadesAdminCreatorV1") || "") : "", state: sharedSnapshot() })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok) throw new Error(result.error || ("Save failed (" + response.status + ")"));
@@ -2930,10 +2923,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         const state = result && result.state ? result.state : {
           customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {}
         };
-        customGames.splice(0, customGames.length, ...(Array.isArray(state.customGames) ? state.customGames.map(game => ({
-          ...game,
-          ownerId: typeof game.ownerId === "string" && game.ownerId ? game.ownerId : "unknown"
-        })) : []));
+        customGames.splice(0, customGames.length, ...(Array.isArray(state.customGames) ? state.customGames : []));
         deletedGameIds.clear();
         (Array.isArray(state.deletedGameIds) ? state.deletedGameIds : []).forEach(id => deletedGameIds.add(id));
         removedCustomGames = state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {};
@@ -3059,14 +3049,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         const name = document.createElement("span");
         name.className = "managed-game-name";
         name.textContent = game.title;
-        const ownerLabel = document.createElement("small");
-        ownerLabel.className = "managed-game-owner";
-        ownerLabel.textContent = game.custom
-          ? (game.ownerId && game.ownerId !== "unknown"
-              ? "Added by: " + (game.creator || "Admin browser")
-              : "Added by: Unknown (older game)")
-          : "Built-in game";
-        row.appendChild(ownerLabel);
         if (game.image) {
           const img = document.createElement("img");
           img.src = game.image;
@@ -3075,7 +3057,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         }
         row.appendChild(name);
 
-        const canEditThisGame = hasGameManagementAccess() || (accessMode === "admin" && game.custom && game.ownerId === adminOwnerId);
+        const canEditThisGame = hasGameManagementAccess() || (accessMode === "admin" && game.custom);
         if (canEditThisGame) {
           const editGame = document.createElement("button");
           editGame.type = "button";
@@ -3083,9 +3065,18 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           editGame.textContent = "Edit game";
           editGame.addEventListener("click", async () => {
             const customItem = customGames.find(item => item.id === game.key);
-            if (accessMode === "admin" && (!customItem || customItem.ownerId !== adminOwnerId)) {
-              alert("You can edit only games added from this admin browser. Older games have an Unknown owner.");
-              return;
+            let adminCreator = "";
+            if (accessMode === "admin") {
+              adminCreator = (localStorage.getItem("spaceArcadesAdminCreatorV1") || "").trim();
+              if (!adminCreator) {
+                adminCreator = (prompt("Enter the creator name you used when adding your games:") || "").trim();
+                if (!adminCreator) return;
+                localStorage.setItem("spaceArcadesAdminCreatorV1", adminCreator);
+              }
+              if (!customItem || String(customItem.creator || "").trim().toLowerCase() !== adminCreator.toLowerCase()) {
+                alert("You can only edit games whose Created by name matches your admin creator name.");
+                return;
+              }
             }
             const newTitle = prompt("Game name:", game.title || "");
             if (newTitle === null) return;
@@ -3584,7 +3575,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
       const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
       // No thumbnail uploader or auto-generated thumbnail: the site owner adds image files manually.
-      customGames.push({ id, title, url, creator, image: "", ownerId: accessMode === "admin" ? adminOwnerId : "unknown" });
+      customGames.push({ id, title, url, creator, image: "" });
       if (!saveCustomGames()) {
         customGames.pop();
         status.textContent = "Could not save this game in this browser.";
