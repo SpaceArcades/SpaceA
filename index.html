@@ -2899,7 +2899,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       const response = await fetch(SHARED_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "save", role, code, state: sharedSnapshot() })
+        body: JSON.stringify({ action: "save", role, code, adminCreator: accessMode === "admin" ? (localStorage.getItem("spaceArcadesAdminCreatorV1") || "") : "", state: sharedSnapshot() })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.ok) throw new Error(result.error || ("Save failed (" + response.status + ")"));
@@ -3056,37 +3056,64 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         }
         row.appendChild(name);
 
-        if (hasGameManagementAccess()) {
-          const editLink = document.createElement("button");
-          editLink.type = "button";
-          editLink.className = "primary-btn";
-          editLink.textContent = "Change link";
-          editLink.addEventListener("click", async () => {
-            const entered = prompt("Enter the new game URL for " + game.title + ":", game.url || "");
-            if (entered === null) return;
-            const newUrl = safeGameUrl(entered);
-            if (!newUrl) { alert("Please enter a valid http:// or https:// link."); return; }
-            const oldUrl = sharedGameLinks[game.key] || game.url;
+        const canEditThisGame = hasGameManagementAccess() || (accessMode === "admin" && game.custom);
+        if (canEditThisGame) {
+          const editGame = document.createElement("button");
+          editGame.type = "button";
+          editGame.className = "primary-btn";
+          editGame.textContent = "Edit game";
+          editGame.addEventListener("click", async () => {
             const customItem = customGames.find(item => item.id === game.key);
-            const oldCustomUrl = customItem && customItem.url;
-            sharedGameLinks[game.key] = newUrl;
-            if (customItem) customItem.url = newUrl;
-            if (customItem) saveCustomGames();
+            let adminCreator = "";
+            if (accessMode === "admin") {
+              adminCreator = (localStorage.getItem("spaceArcadesAdminCreatorV1") || "").trim();
+              if (!adminCreator) {
+                adminCreator = (prompt("Enter the creator name you used when adding your games:") || "").trim();
+                if (!adminCreator) return;
+                localStorage.setItem("spaceArcadesAdminCreatorV1", adminCreator);
+              }
+              if (!customItem || String(customItem.creator || "").trim().toLowerCase() !== adminCreator.toLowerCase()) {
+                alert("You can only edit games whose Created by name matches your admin creator name.");
+                return;
+              }
+            }
+            const newTitle = prompt("Game name:", game.title || "");
+            if (newTitle === null) return;
+            if (!newTitle.trim()) { alert("Game name cannot be empty."); return; }
+            const enteredUrl = prompt("Game link (URL):", game.url || "");
+            if (enteredUrl === null) return;
+            const newUrl = safeGameUrl(enteredUrl);
+            if (!newUrl) { alert("Please enter a valid http:// or https:// link."); return; }
+            const newImage = prompt("Thumbnail image URL (leave blank for no thumbnail):", game.image || "");
+            if (newImage === null) return;
+            if (newImage.trim() && !safeGameUrl(newImage)) { alert("Please enter a valid http:// or https:// thumbnail URL."); return; }
+            const oldGame = customItem ? { ...customItem } : null;
+            const oldLink = sharedGameLinks[game.key];
             try {
+              if (customItem) {
+                customItem.title = newTitle.trim();
+                customItem.url = newUrl;
+                customItem.image = newImage.trim();
+                saveCustomGames();
+              } else {
+                sharedGameLinks[game.key] = newUrl;
+                savedGameThumbnails[game.key] = newImage.trim();
+              }
               await saveSharedStateNow();
               renderManagedGames();
               renderGameCatalog();
+              applySavedGameThumbnails();
+              refreshThumbnailSelector();
               if (currentGameKey === game.key) openGame(game.key);
-              alert("Game link updated and published on both websites.");
+              alert("Game details updated and published.");
             } catch (error) {
-              if (oldUrl) sharedGameLinks[game.key] = oldUrl;
-              else delete sharedGameLinks[game.key];
-              if (customItem && oldCustomUrl) customItem.url = oldCustomUrl;
+              if (customItem && oldGame) Object.assign(customItem, oldGame);
+              if (oldLink === undefined) delete sharedGameLinks[game.key]; else sharedGameLinks[game.key] = oldLink;
               if (customItem) saveCustomGames();
-              alert("Could not save the new link: " + error.message);
+              alert("Could not save the game changes: " + error.message);
             }
           });
-          row.appendChild(editLink);
+          row.appendChild(editGame);
         }
 
         // Admins, co-owners, and owners may remove custom-added games only.
@@ -3431,7 +3458,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       document.getElementById("accessPanelDescription").textContent =
         fullAccess
           ? `${mode === "owner" ? "Owner" : "Co-Owner"} access: add games, remove games, and restore removed games. Access stays active after reloading.`
-          : "Admin access: add games and remove custom-added games. Owners and co-owners can restore removed games. Add your own thumbnail image files to the website folder yourself.";
+          : "Admin access: add games, edit only games matching your creator name, and remove custom-added games. Owners and co-owners can edit all games and restore removed games.";
       renderManagedGames();
       applySavedGameThumbnails();
       refreshThumbnailSelector();
