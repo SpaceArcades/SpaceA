@@ -104,6 +104,16 @@ export default async function handler(req, res) {
       }
       state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
       state.gameLinks = current.state.gameLinks || {};
+      const adminCreator = String(req.body.adminCreator || "").trim().toLowerCase();
+      const previousById = new Map(previousGames.map(game => [game.id, game]));
+      for (const incoming of state.customGames) {
+        const previous = incoming && previousById.get(incoming.id);
+        if (!previous) continue;
+        const changed = ["title", "url", "image"].some(field => (incoming[field] || "") !== (previous[field] || ""));
+        if (changed && (!adminCreator || String(previous.creator || "").trim().toLowerCase() !== adminCreator)) {
+          return res.status(403).json({ error: "Admins can edit only games matching their creator name." });
+        }
+      }
     }
 
     if (JSON.stringify(state).length > 4_000_000) {
