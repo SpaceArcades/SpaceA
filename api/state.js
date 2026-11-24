@@ -86,16 +86,24 @@ export default async function handler(req, res) {
 
     if (role === "admin") {
       const current = await readState();
-      state.deletedGameIds = current.state.deletedGameIds || [];
-      state.removedCustomGames = current.state.removedCustomGames || {};
-      state.deletedGameTimes = current.state.deletedGameTimes || {};
+      const previousGames = Array.isArray(current.state.customGames) ? current.state.customGames : [];
+      const incomingIds = new Set(state.customGames.map(g => g && g.id).filter(id => typeof id === "string"));
+      const removedGames = previousGames.filter(game => game && typeof game.id === "string" && !incomingIds.has(game.id));
+
+      // Admins can remove only records in customGames. Built-in games are never
+      // stored in this list, so they cannot be removed through this endpoint.
+      state.deletedGameIds = [...new Set([
+        ...(current.state.deletedGameIds || []),
+        ...removedGames.map(game => game.id)
+      ])];
+      state.deletedGameTimes = { ...(current.state.deletedGameTimes || {}) };
+      state.removedCustomGames = { ...(current.state.removedCustomGames || {}) };
+      for (const game of removedGames) {
+        state.deletedGameTimes[game.id] = Date.now();
+        state.removedCustomGames[game.id] = game;
+      }
       state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
       state.gameLinks = current.state.gameLinks || {};
-      const oldIds = new Set((current.state.customGames || []).map(g => g.id));
-      const newIds = new Set(state.customGames.map(g => g.id));
-      if ([...oldIds].some(id => !newIds.has(id))) {
-        return res.status(403).json({ error: "Admins cannot remove games" });
-      }
     }
 
     if (JSON.stringify(state).length > 4_000_000) {
