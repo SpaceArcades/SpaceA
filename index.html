@@ -1877,9 +1877,9 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           <button class="primary-btn" id="relinquishAccessBtn" type="button">Remove my access</button>
           <span class="status" id="relinquishStatus" role="status" aria-live="polite"></span>
         </div>
-        <div class="panel" style="margin-top:16px">
-          <h3>Custom games</h3>
-          <p>Games added here stay in this browser. Co-Owner and Owner access can remove custom games.</p>
+        <div class="panel" id="gameEditPanel" style="margin-top:16px">
+          <h3>Edit games</h3>
+          <p>Choose a game below and use Edit game to change its name, link, or thumbnail. Admins can edit only their own custom-added games; co-owners and owners can edit all games.</p>
           <div id="managedGamesList" class="games-catalog"></div>
         </div>
       </section>
@@ -3038,7 +3038,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       list.replaceChildren();
 
       const heading = document.createElement("h4");
-      heading.textContent = "Games in Arcade";
+      heading.textContent = "Select a game to edit";
       list.appendChild(heading);
 
       allGameEntries().forEach(game => {
@@ -3460,7 +3460,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       document.getElementById("accessPanelDescription").textContent =
         fullAccess
           ? `${mode === "owner" ? "Owner" : "Co-Owner"} access: add games, remove games, and restore removed games. Access stays active after reloading.`
-          : "Admin access: add games, edit only games matching your creator name, and remove custom-added games. Owners and co-owners can edit all games and restore removed games.";
+          : "Admin access: add games, edit your own custom-added games, and remove custom-added games. Owners and co-owners can edit all games and restore removed games.";
       renderManagedGames();
       applySavedGameThumbnails();
       refreshThumbnailSelector();
