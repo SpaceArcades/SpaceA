@@ -104,14 +104,26 @@ export default async function handler(req, res) {
       }
       state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
       state.gameLinks = current.state.gameLinks || {};
-      const adminCreator = String(req.body.adminCreator || "").trim().toLowerCase();
+      const adminOwnerId = String(req.body.adminOwnerId || "").trim();
+      if (!adminOwnerId || adminOwnerId.length > 200) {
+        return res.status(403).json({ error: "Admin browser identity is missing. Reload the page and try again." });
+      }
       const previousById = new Map(previousGames.map(game => [game.id, game]));
       for (const incoming of state.customGames) {
-        const previous = incoming && previousById.get(incoming.id);
-        if (!previous) continue;
+        if (!incoming || typeof incoming.id !== "string") continue;
+        const previous = previousById.get(incoming.id);
+        if (!previous) {
+          // Ownership begins with games added after this update. Older records
+          // remain explicitly unknown rather than being claimed by an admin.
+          incoming.ownerId = adminOwnerId;
+          continue;
+        }
+        const savedOwnerId = typeof previous.ownerId === "string" && previous.ownerId
+          ? previous.ownerId : "unknown";
+        incoming.ownerId = savedOwnerId;
         const changed = ["title", "url", "image"].some(field => (incoming[field] || "") !== (previous[field] || ""));
-        if (changed && (!adminCreator || String(previous.creator || "").trim().toLowerCase() !== adminCreator)) {
-          return res.status(403).json({ error: "Admins can edit only games matching their creator name." });
+        if (changed && (savedOwnerId === "unknown" || savedOwnerId !== adminOwnerId)) {
+          return res.status(403).json({ error: "Admins can edit only games they added from this browser. Older games have an Unknown owner." });
         }
       }
     }
