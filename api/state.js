@@ -40,7 +40,16 @@ function authorizationError(role, code) {
   return null;
 }
 
+async function ensureTable() {
+  await sql()`CREATE TABLE IF NOT EXISTS shared_state (
+    id INTEGER PRIMARY KEY,
+    state JSONB NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`;
+}
+
 async function readState() {
+  await ensureTable();
   const rows = await sql()`SELECT state FROM shared_state WHERE id = 1 LIMIT 1`;
   if (!rows.length) return { initialized: false, state: EMPTY };
   const original = rows[0].state || { ...EMPTY };
@@ -146,6 +155,7 @@ export default async function handler(req, res) {
       gameTitles: state.gameTitles && typeof state.gameTitles === "object" ? state.gameTitles : {}
     };
     expireRestoreEntries(clean);
+    await ensureTable();
     await sql()`
       INSERT INTO shared_state (id, state, updated_at)
       VALUES (1, ${JSON.stringify(clean)}::jsonb, NOW())
@@ -155,6 +165,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.error("SpaceArcades database save error:", error);
-    return res.status(500).json({ error: "Could not save shared data" });
+    return res.status(500).json({ error: "Could not save shared data: " + (error && error.message ? error.message : "unknown error") });
   }
 }
