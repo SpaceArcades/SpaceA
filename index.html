@@ -74,7 +74,6 @@
 
       padding: 0;
 
-
     }
 
     body {
@@ -997,20 +996,6 @@
 
     }
 
-    .game-player-top {
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: space-between;
-
-      gap: 12px;
-
-      margin-bottom: 12px;
-
-    }
-
     .game-player-title {
 
       font-size: 1.1rem;
@@ -1165,7 +1150,6 @@
 
     }
 
-  
     .translator-panel { padding: 22px; }
     .translator-languages {
       display: grid;
@@ -1212,7 +1196,6 @@
       .translator-field textarea { min-height: 160px; }
       .translator-panel { padding: 14px; }
     }
-
 
     .special-tab {
       color: #c4a1ff !important;
@@ -1280,7 +1263,6 @@
       #adminButton { right: 12px; bottom: 12px; }
       .managed-game-row { flex-wrap:wrap; }
     }
-
 
     .site-stats {
       display:flex; justify-content:center; gap:18px; flex-wrap:wrap;
@@ -1363,15 +1345,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 .count,.site-stats {background:rgba(12,22,42,.78);border-color:rgba(143,181,255,.16);color:#aebfda}
 .site-stats {padding:11px 18px}
 #adminButton {box-shadow:0 8px 26px rgba(0,0,0,.35)}
-  top:104px;right:22px;bottom:auto;padding:12px 18px;
-  background:linear-gradient(120deg,#256db0,#57439a);border:1px solid rgba(174,213,255,.45);
-  box-shadow:0 10px 30px rgba(24,91,164,.35),0 0 20px rgba(88,144,255,.2);
-}
-  top:158px;right:22px;bottom:auto;width:min(720px,calc(100vw - 28px));
-  height:min(760px,calc(100vh - 180px));max-height:calc(100vh - 180px);
-  border:1px solid rgba(143,190,255,.32);border-radius:22px;
-  background:linear-gradient(150deg,rgba(8,17,37,.99),rgba(12,12,34,.99));
-}
 .thumbnail-drop-zone {border-color:rgba(143,181,255,.28);border-radius:16px;background:rgba(8,17,34,.48)}
 .translator-panel {border-radius:22px}
 @media(max-width:768px) {
@@ -1395,7 +1368,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
   <canvas id="spaceCanvas"></canvas>
 
-
   <div class="shell">
 
     <header>
@@ -1403,7 +1375,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       <a class="brand-link wordmark" href="index.html" aria-label="SpaceArcades home">SpaceArcades</a>
 
       <div class="header-controls">
-
 
         <div class="music-player">
 
@@ -1579,7 +1550,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
               <div class="preview-icon" id="previewIcon">
 
-                <img src="data:image/jpeg;base64,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" alt="">
+                <img src="magma-transparent.png" alt="">
 
               </div>
 
@@ -1615,7 +1586,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
             </div>
 
-            <span class="count">11 games</span>
+            <span class="count">9 games</span>
 
           </div>
 
@@ -1645,15 +1616,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
             </button>
 
-            <button class="game-card" type="button" id="minecraftGameCard">
-              <img class="game-thumbnail" src="mc.png" alt="Minecraft" onerror="this.style.display='none'">
-              <div class="game-card-body">
-                <h3>Minecraft</h3>
-              </div>
-            </button>
-
-
-
             <button class="game-card" type="button" id="grannyGameCard">
               <img class="game-thumbnail" src="granny.png" alt="Granny" onerror="this.style.display='none'">
               <div class="game-card-body">
@@ -1661,24 +1623,17 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               </div>
             </button>
 
-
-
-
-
-            <button class="game-card" type="button" id="fnaf3GameCard">
-              <img class="game-thumbnail" src="fnaf3.png" alt="Five Nights at Freddy's 3" onerror="this.style.display='none'">
-              <div class="game-card-body"><h3>FNAF 3</h3></div>
+            <button class="game-card" type="button" id="fnaf1GameCard">
+              <img class="game-thumbnail" src="fnaf1.png" alt="Five Nights at Freddy's 1" onerror="this.style.display='none'">
+              <div class="game-card-body"><h3>FNAF 1</h3></div>
             </button>
 
-            <button class="game-card" type="button" id="fnaf1GameCard">
-  <img class="game-thumbnail" src="fnaf1.png" alt="Five Nights at Freddy's 1" onerror="this.style.display='none'">
-  <div class="game-card-body"><h3>FNAF 1</h3></div>
-</button>
-<button class="game-card" type="button" id="fnaf2GameCard">
-  <img class="game-thumbnail" src="fnaf2.png" alt="Five Nights at Freddy's 2" onerror="this.style.display='none'">
-  <div class="game-card-body"><h3>FNAF 2</h3></div>
-</button>
-<button class="game-card" type="button" id="baldiGameCard">
+            <button class="game-card" type="button" id="fnaf2GameCard">
+              <img class="game-thumbnail" src="fnaf2.png" alt="Five Nights at Freddy's 2" onerror="this.style.display='none'">
+              <div class="game-card-body"><h3>FNAF 2</h3></div>
+            </button>
+
+            <button class="game-card" type="button" id="baldiGameCard">
               <img class="game-thumbnail" src="b.png" alt="Baldi's Basics" onerror="this.style.display='none'">
               <div class="game-card-body">
                 <h3>Baldi's Basics</h3>
@@ -1696,7 +1651,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             </button>
 
             <button class="game-card" type="button" id="deltaruneGameCard">
-              <img class="game-thumbnail" src="delt.png" alt="DELTARUNE Battle Simulator" onerror="this.style.display=\'none\'">
+              <img class="game-thumbnail" src="delt.png" alt="DELTARUNE Battle Simulator" onerror="this.style.display='none'">
               <div class="game-card-body"><h3>DELTARUNE</h3></div>
             </button>
 
@@ -1800,7 +1755,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         </div>
       </section>
 
-
       <section id="calculatorSection" class="hidden">
         <div class="section-heading"><div><h2>Calculator</h2><p class="sub">A simple calculator for quick maths.</p></div></div>
         <div class="panel" style="max-width:420px">
@@ -1880,7 +1834,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         </div>
         <div class="panel" id="gameEditPanel" style="margin-top:16px">
           <h3>Edit games</h3>
-          <p>Choose a game below and use Edit game to change its name, link, or thumbnail. Admins can edit only their own custom-added games; co-owners and owners can edit all games.</p>
+          <p>Choose a game below and use Edit game to change its name, link, or thumbnail. Admins can edit and remove only the games they added; co-owners and owners can edit and remove all games.</p>
           <div id="managedGamesList" class="games-catalog"></div>
         </div>
       </section>
@@ -2165,14 +2119,11 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     const games = {
       slope: { title: "Slope", url: "https://slopesunblocked.io/" },
       spaceWaves: { title: "Space Waves", url: "https://www.crazygames.com/embed/space-waves" },
-      // Eaglercraft browser-playable Minecraft. If embedding is blocked, use "Open in new tab".
-      minecraft: { title: "Minecraft", url: "https://eaglercraft.dev/clients/Vanilla%201.12.2%20JS/index.html" },
       granny: { title: "Granny", url: "https://grannyonline.io/" },
 
       // Alternative browser-playable HTML5 ports. Some providers may restrict iframe embedding.
       fnaf1: { title: "FNAF 1", url: "https://fnaf1.io/" },
       fnaf2: { title: "FNAF 2", url: "https://fnaf1.io/fnaf-2" },
-      fnaf3: { title: "FNAF 3", url: "https://fnaf1.io/fnaf-3" },
 
       // Baldi's Basics browser embed (thumbnail file: b.png).
       baldi: { title: "Baldi's Basics", url: "https://www.miniplay.com/embed/baldis-basics-in-education-and-learning" },
@@ -2295,7 +2246,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       document.getElementById("previewIcon").querySelector("img").src = "SpaceArcades.png";
       document.title = originalName;
       faviconLink.href = "SpaceArcades.png";
-      status.textContent = "Reverted to the original SpaceArcades name and logo."; 
+      status.textContent = "Reverted to the original SpaceArcades name and logo.";
     });
 
     /* NAVIGATION TABS */
@@ -2371,11 +2322,11 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
       const game = games[gameKey] || configuredGames.find(item => item.id === gameKey) || customGames.find(item => item.id === gameKey);
       if (!game) { currentGameKey = null; return; }
-      if (sharedGameLinks[gameKey]) game.url = sharedGameLinks[gameKey];
+      const gameUrl = sharedGameLinks[gameKey] || game.url;
 
       gamePlayerTitle.textContent = game.title;
       const creatorLine = document.getElementById("gameCreatorLine");
-      if (game.custom || customGames.some(item => item.id === gameKey)) {
+      if (customGames.some(item => item.id === gameKey)) {
         creatorLine.textContent = "Created by: " + (game.creator || "Creator not listed");
         creatorLine.classList.remove("hidden");
       } else {
@@ -2390,7 +2341,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       gamePlayerFrame.replaceChildren();
 
       const frame = document.createElement("iframe");
-      frame.src = game.url;
+      frame.src = gameUrl;
       frame.title = game.title;
       frame.width = "485";
       frame.height = "402";
@@ -2405,11 +2356,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
       gamePlayerFrame.appendChild(frame);
 
-      document.getElementById('gameOpenTabBtn').classList.remove('hidden');
-      document.getElementById('gameFullscreenBtn').classList.remove('hidden');
-      document.getElementById('gameRefreshBtn').classList.remove('hidden');
-      document.getElementById('gameVolumeBtn').classList.remove('hidden');
-
       gameCatalogView.classList.add("hidden");
       gamePlayerView.classList.remove("hidden");
       document.getElementById("adminButton").classList.add("hidden");
@@ -2417,23 +2363,12 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     }
 
     function closeGame() {
-      // Stop and remove the embedded game before returning to the catalogue.
-      // Keep this function safe even if optional UI elements are absent.
       currentGameKey = null;
       gamePlayerFrame.replaceChildren();
 
       gamePlayerView.classList.add("hidden");
       gameCatalogView.classList.remove("hidden");
       document.getElementById("adminButton").classList.remove("hidden");
-
-      const openTabButton = document.getElementById("gameOpenTabBtn");
-      const fullscreenButton = document.getElementById("gameFullscreenBtn");
-      const refreshButton = document.getElementById("gameRefreshBtn");
-      const volumeButton = document.getElementById("gameVolumeBtn");
-      if (openTabButton) openTabButton.classList.remove("hidden");
-      if (fullscreenButton) fullscreenButton.classList.remove("hidden");
-      if (refreshButton) refreshButton.classList.remove("hidden");
-      if (volumeButton) volumeButton.classList.remove("hidden");
 
       // Resume the arcade music only if the user had enabled it.
       if (userWantsMusic) {
@@ -2444,24 +2379,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         });
       }
     }
-
-
-
-    function openComingSoon() {
-      audio.pause();
-      playBtn.textContent = '▶';
-      gamePlayerTitle.textContent = '';
-      gamePlayerFrame.replaceChildren();
-      const message = document.createElement('div');
-      message.className = 'coming-soon-message';
-      message.textContent = 'We’ll fix it tomorrow! Coming soon.';
-      gamePlayerFrame.appendChild(message);
-      document.getElementById('gameOpenTabBtn').classList.add('hidden');
-      document.getElementById('gameFullscreenBtn').classList.add('hidden');
-      gameCatalogView.classList.add('hidden');
-      gamePlayerView.classList.remove('hidden');
-    }
-
 
     document.getElementById("gameRefreshBtn").addEventListener("click", () => {
       if (currentGameKey && (games[currentGameKey] || configuredGames.some(item => item.id === currentGameKey) || customGames.some(item => item.id === currentGameKey))) openGame(currentGameKey);
@@ -2518,7 +2435,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     document.getElementById("gameBackBtn").addEventListener("click", closeGame);
 
     document.getElementById("gameOpenTabBtn").addEventListener("click", () => {
-      const game = allGameEntries().find(item => item.title === gamePlayerTitle.textContent);
+      const game = allGameEntries().find(item => item.key === currentGameKey);
       if (game) window.open(game.url, "_blank", "noopener,noreferrer");
     });
     document.getElementById("gameFullscreenBtn").addEventListener("click", async () => {
@@ -2552,8 +2469,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       }
 
     });
-
-
 
     /* BUILT-IN TRANSLATOR */
     const translatorInput = document.getElementById("translatorInput");
@@ -2669,8 +2584,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       translatorStatus.textContent = "";
     });
 
-
-
     /* BASIC CALCULATOR */
     const calculatorDisplay = document.getElementById("calculatorDisplay");
     const calculatorStatus = document.getElementById("calculatorStatus");
@@ -2752,66 +2665,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       return entries.filter((game, index, list) => list.findIndex(item => item.key === game.key) === index);
     }
 
-    function renderGameCatalog() {
-      const catalog = document.querySelector("#gamesCatalogView .games-catalog");
-      if (!catalog) return;
-
-      // Existing game cards and their supplied thumbnail files are deliberately
-      // left untouched. Only the three newly requested games and custom games
-      // are appended here.
-      const addedKeys = ["kapi", "tcgOne", "onePiecePacks"];
-      addedKeys.forEach(key => {
-        const game = games[key];
-        if (!game || document.getElementById("added-" + key)) return;
-        const card = document.createElement("button");
-        card.type = "button";
-        card.id = "added-" + key;
-        card.className = "game-card";
-        card.addEventListener("click", () => openGame(key));
-
-        const image = document.createElement("img");
-        image.className = "game-thumbnail";
-        image.alt = game.title;
-        image.src = game.image;
-        image.onerror = () => { image.style.display = "none"; };
-
-        const body = document.createElement("div");
-        body.className = "game-card-body";
-        const title = document.createElement("h3");
-        title.textContent = game.title;
-        body.append(image, title);
-        card.appendChild(body);
-        catalog.appendChild(card);
-      });
-
-      customGames.forEach(game => {
-        if (document.getElementById("custom-card-" + game.id)) return;
-        const card = document.createElement("button");
-        card.type = "button";
-        card.id = "custom-card-" + game.id;
-        card.className = "game-card";
-        card.addEventListener("click", () => openGame(game.id));
-        const body = document.createElement("div");
-        body.className = "game-card-body";
-        const title = document.createElement("h3");
-        title.textContent = game.title;
-        body.appendChild(title);
-        if (game.image) {
-          const image = document.createElement("img");
-          image.className = "game-thumbnail";
-          image.alt = game.title;
-          image.src = game.image;
-          image.onerror = () => { image.style.display = "none"; };
-          card.appendChild(image);
-        }
-        card.appendChild(body);
-        catalog.appendChild(card);
-      });
-
-      const count = document.querySelector("#gamesCatalogView .count");
-      if (count) count.textContent = catalog.querySelectorAll(".game-card").length + " games";
-    }
-
     const DELETED_GAMES_KEY = "spaceArcadesDeletedGamesV1";
     const DELETED_GAME_TIMES_KEY = "spaceArcadesDeletedGameTimesV1";
     const RESTORE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
@@ -2876,7 +2729,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       await saveSharedStateNow();
     }
 
-
     // SHARED DATA: Vercel API + JSON stored in Vercel Blob.
     // localStorage remains a temporary cache; the shared API is authoritative.
     function sharedSnapshot() {
@@ -2888,14 +2740,19 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         deletedGameTimes,
         removedCustomGames,
         thumbnails: savedGameThumbnails || {},
-        gameLinks: sharedGameLinks || {}
+        gameLinks: sharedGameLinks || {},
+        gameTitles: gameTitleOverrides || {}
       };
     }
 
     async function saveSharedStateNow() {
       if (!sharedDataReady) throw new Error("Shared data is still loading. Please try again.");
       const role = accessMode;
-      const code = sessionStorage.getItem(SHARED_CODE_KEY) || "";
+      let code = sessionStorage.getItem(SHARED_CODE_KEY) || "";
+      if (role && !code) {
+        code = (prompt("Enter your access code to save changes:") || "").trim();
+        if (code) sessionStorage.setItem(SHARED_CODE_KEY, code);
+      }
       if (!role || !code) throw new Error("Please enter your access code again.");
       const response = await fetch(SHARED_API_URL, {
         method: "POST",
@@ -2921,7 +2778,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         if (!response.ok) throw new Error("Shared data could not be loaded");
         const result = await response.json();
         const state = result && result.state ? result.state : {
-          customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {}
+          customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {}, gameTitles: {}
         };
         customGames.splice(0, customGames.length, ...(Array.isArray(state.customGames) ? state.customGames : []));
         deletedGameIds.clear();
@@ -2931,6 +2788,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         cleanupExpiredRestoreEntries();
         savedGameThumbnails = state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {};
         sharedGameLinks = state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {};
+        gameTitleOverrides = state.gameTitles && typeof state.gameTitles === "object" ? state.gameTitles : {};
         localStorage.setItem(CUSTOM_GAMES_KEY, JSON.stringify(customGames));
         localStorage.setItem(DELETED_GAMES_KEY, JSON.stringify([...deletedGameIds]));
         localStorage.setItem(DELETED_GAME_TIMES_KEY, JSON.stringify(deletedGameTimes));
@@ -2940,6 +2798,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         document.querySelectorAll('#gamesCatalogView .games-catalog [id^="added-"]').forEach(card => card.remove());
         renderGameCatalog();
         applySavedGameThumbnails();
+        applyGameTitleOverrides();
         refreshThumbnailSelector();
         renderManagedGames();
         sharedDataReady = true;
@@ -2978,20 +2837,12 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     function existingCardId(gameKey) {
       const ids = {
         slope: "slopeGameCard", spaceWaves: "spaceWavesGameCard",
-        minecraft: "minecraftGameCard", granny: "grannyGameCard",
-        fnaf1: "fnaf1GameCard", fnaf2: "fnaf2GameCard", fnaf3: "fnaf3GameCard",
+        granny: "grannyGameCard",
+        fnaf1: "fnaf1GameCard", fnaf2: "fnaf2GameCard",
         baldi: "baldiGameCard", mario: "marioGameCard",
         sonicCD: "sonicCDGameCard", deltarune: "deltaruneGameCard"
       };
       return ids[gameKey] || ("added-" + gameKey);
-    }
-
-    function allGameEntries() {
-      return [
-        ...Object.entries(games).map(([key, game]) => ({ key, ...game, custom: false })),
-        ...configuredGames.map(game => ({ key: game.id, ...game, custom: false })),
-        ...customGames.map(game => ({ key: game.id, ...game, custom: true }))
-      ];
     }
 
     function appendGameCard(game, key) {
@@ -3057,7 +2908,13 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         }
         row.appendChild(name);
 
-        const canEditThisGame = hasGameManagementAccess() || (accessMode === "admin" && game.custom);
+        // Admins only manage games they created (matched by "Created by" name).
+        // Co-owners and owners manage every game.
+        const myAdminName = (localStorage.getItem("spaceArcadesAdminCreatorV1") || "").trim().toLowerCase();
+        const adminOwnsThis = accessMode === "admin" && game.custom && myAdminName &&
+          String(game.creator || "").trim().toLowerCase() === myAdminName;
+        const canEditThisGame = hasGameManagementAccess() || adminOwnsThis;
+
         if (canEditThisGame) {
           const editGame = document.createElement("button");
           editGame.type = "button";
@@ -3065,19 +2922,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           editGame.textContent = "Edit game";
           editGame.addEventListener("click", async () => {
             const customItem = customGames.find(item => item.id === game.key);
-            let adminCreator = "";
-            if (accessMode === "admin") {
-              adminCreator = (localStorage.getItem("spaceArcadesAdminCreatorV1") || "").trim();
-              if (!adminCreator) {
-                adminCreator = (prompt("Enter the creator name you used when adding your games:") || "").trim();
-                if (!adminCreator) return;
-                localStorage.setItem("spaceArcadesAdminCreatorV1", adminCreator);
-              }
-              if (!customItem || String(customItem.creator || "").trim().toLowerCase() !== adminCreator.toLowerCase()) {
-                alert("You can only edit games whose Created by name matches your admin creator name.");
-                return;
-              }
-            }
             const newTitle = prompt("Game name:", game.title || "");
             if (newTitle === null) return;
             if (!newTitle.trim()) { alert("Game name cannot be empty."); return; }
@@ -3085,11 +2929,14 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
             if (enteredUrl === null) return;
             const newUrl = safeGameUrl(enteredUrl);
             if (!newUrl) { alert("Please enter a valid http:// or https:// link."); return; }
-            const newImage = prompt("Thumbnail image URL (leave blank for no thumbnail):", game.image || "");
+            const newImage = prompt("Thumbnail image URL (leave blank to keep/none):", game.image || savedGameThumbnails[game.key] || "");
             if (newImage === null) return;
             if (newImage.trim() && !safeGameUrl(newImage)) { alert("Please enter a valid http:// or https:// thumbnail URL."); return; }
+
             const oldGame = customItem ? { ...customItem } : null;
             const oldLink = sharedGameLinks[game.key];
+            const oldThumb = savedGameThumbnails[game.key];
+            const oldTitle = gameTitleOverrides[game.key];
             try {
               if (customItem) {
                 customItem.title = newTitle.trim();
@@ -3098,30 +2945,30 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
                 saveCustomGames();
               } else {
                 sharedGameLinks[game.key] = newUrl;
-                savedGameThumbnails[game.key] = newImage.trim();
+                gameTitleOverrides[game.key] = newTitle.trim();
+                if (newImage.trim()) savedGameThumbnails[game.key] = newImage.trim();
+                else delete savedGameThumbnails[game.key];
               }
               await saveSharedStateNow();
+              updateCardInPlace(game.key, newTitle.trim(), newImage.trim(), !!customItem);
+              applyGameTitleOverrides();
               renderManagedGames();
-              const editedCustomCard = document.getElementById("custom-card-" + game.key);
-              if (editedCustomCard) editedCustomCard.remove();
-              renderGameCatalog();
-              applySavedGameThumbnails();
               refreshThumbnailSelector();
               if (currentGameKey === game.key) openGame(game.key);
               alert("Game details updated and published.");
             } catch (error) {
-              if (customItem && oldGame) Object.assign(customItem, oldGame);
+              if (customItem && oldGame) { Object.assign(customItem, oldGame); saveCustomGames(); }
               if (oldLink === undefined) delete sharedGameLinks[game.key]; else sharedGameLinks[game.key] = oldLink;
-              if (customItem) saveCustomGames();
+              if (oldThumb === undefined) delete savedGameThumbnails[game.key]; else savedGameThumbnails[game.key] = oldThumb;
+              if (oldTitle === undefined) delete gameTitleOverrides[game.key]; else gameTitleOverrides[game.key] = oldTitle;
               alert("Could not save the game changes: " + error.message);
             }
           });
           row.appendChild(editGame);
         }
 
-        // Admins, co-owners, and owners may remove custom-added games only.
-        // Built-in and preconfigured arcade games remain protected.
-        if (game.custom && (accessMode === "admin" || hasGameManagementAccess())) {
+        // Co-owners and owners can remove every game; admins only their own.
+        if (hasGameManagementAccess() || adminOwnsThis) {
           const remove = document.createElement("button");
           remove.type = "button";
           remove.className = "delete-game-btn";
@@ -3152,6 +2999,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
               if (card) card.remove();
               const customCard = document.getElementById("custom-card-" + game.key);
               if (customCard) customCard.remove();
+              renderGameCatalog();
               renderManagedGames();
               if (currentGameKey === game.key) closeGame();
             } catch (error) {
@@ -3253,6 +3101,32 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       try { return JSON.parse(localStorage.getItem(GAME_THUMBNAILS_KEY) || "{}"); } catch { return {}; }
     }
     let savedGameThumbnails = loadGameThumbnails();
+    let gameTitleOverrides = {};
+
+    function applyGameTitleOverrides() {
+      Object.entries(gameTitleOverrides).forEach(([key, title]) => {
+        if (!title) return;
+        if (games[key]) games[key].title = title;
+        const cfg = configuredGames.find(g => g.id === key); if (cfg) cfg.title = title;
+        const card = document.getElementById(existingCardId(key));
+        const h3 = card && card.querySelector("h3"); if (h3) h3.textContent = title;
+      });
+    }
+
+    function updateCardInPlace(key, title, image, isCustom) {
+      const card = document.getElementById(existingCardId(key));
+      if (!card) return;
+      const h3 = card.querySelector("h3"); if (h3) h3.textContent = title;
+      let img = card.querySelector("img.game-thumbnail");
+      if (image) {
+        if (!img) {
+          img = document.createElement("img");
+          img.className = "game-thumbnail";
+          card.insertBefore(img, card.firstChild);
+        }
+        img.style.display = ""; img.alt = title; img.src = image;
+      } else if (isCustom && img) img.remove();
+    }
 
     function findGameCard(key) {
       const id = existingCardId(key);
@@ -3299,18 +3173,17 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
     }
     function applySavedGameThumbnails() {
       Object.entries(savedGameThumbnails).forEach(([key, src]) => {
+        if (!src) return;
         const card = findGameCard(key);
         if (!card) return;
         const existingImage = card.querySelector("img.game-thumbnail");
-        if (existingImage && existingImage.style.display !== "none") return;
-        if (existingImage) existingImage.remove();
+        if (existingImage) { existingImage.style.display = ""; existingImage.src = src; return; }
         const image = document.createElement("img");
         image.className = "game-thumbnail";
         image.dataset.customThumbnail = "true";
         image.alt = "Game thumbnail";
         image.src = src;
-        const body = card.querySelector(".game-card-body");
-        card.insertBefore(image, body || null);
+        card.insertBefore(image, card.querySelector(".game-card-body") || null);
       });
     }
     function saveMissingGameThumbnail(file) {
@@ -3460,8 +3333,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         mode === "owner" ? "Owner Panel" : mode === "coowner" ? "Co-Owner Panel" : "Admin Panel";
       document.getElementById("accessPanelDescription").textContent =
         fullAccess
-          ? `${mode === "owner" ? "Owner" : "Co-Owner"} access: add games, remove games, and restore removed games. Access stays active after reloading.`
-          : "Admin access: add games, edit your own custom-added games, and remove custom-added games. Owners and co-owners can edit all games and restore removed games.";
+          ? `${mode === "owner" ? "Owner" : "Co-Owner"} access: add games, edit and remove every game, and restore removed games. Access stays active after reloading.`
+          : "Admin access: add games, and edit or remove only the games you added. Owners and co-owners can manage all games and restore removed games.";
       renderManagedGames();
       applySavedGameThumbnails();
       refreshThumbnailSelector();
@@ -3566,7 +3439,13 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       event.preventDefault();
       const title = document.getElementById("newGameTitle").value.trim();
       const url = safeGameUrl(document.getElementById("newGameUrl").value);
-      const creator = document.getElementById("newGameCreator").value.trim();
+      let creator = document.getElementById("newGameCreator").value.trim();
+      // Admins always use one consistent creator name so ownership matching works.
+      if (accessMode === "admin") {
+        const savedCreator = (localStorage.getItem("spaceArcadesAdminCreatorV1") || "").trim();
+        if (savedCreator) creator = savedCreator;
+        else if (creator) localStorage.setItem("spaceArcadesAdminCreatorV1", creator);
+      }
       const status = document.getElementById("adminGameStatus");
       if (!title || !url || !creator) {
         status.textContent = "Enter a game name, creator name, and a valid http/https link.";
@@ -3574,7 +3453,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       }
 
       const id = "custom-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
-      // No thumbnail uploader or auto-generated thumbnail: the site owner adds image files manually.
+      // No thumbnail uploader or auto-generated thumbnail: add one later from the thumbnail panel.
       customGames.push({ id, title, url, creator, image: "" });
       if (!saveCustomGames()) {
         customGames.pop();
@@ -3594,12 +3473,12 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       }
     });
 
-    // Restore the original built-in game-card actions without changing their thumbnails.
+    // Built-in game-card actions.
     [
       ["slopeGameCard", "slope"], ["spaceWavesGameCard", "spaceWaves"],
-      ["minecraftGameCard", "minecraft"], ["grannyGameCard", "granny"],
+      ["grannyGameCard", "granny"],
       ["fnaf1GameCard", "fnaf1"], ["fnaf2GameCard", "fnaf2"],
-      ["fnaf3GameCard", "fnaf3"], ["baldiGameCard", "baldi"],
+      ["baldiGameCard", "baldi"],
       ["marioGameCard", "mario"], ["sonicCDGameCard", "sonicCD"],
       ["deltaruneGameCard", "deltarune"]
     ].forEach(([elementId, gameKey]) => {
@@ -3607,7 +3486,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       if (card) card.addEventListener("click", () => openGame(gameKey));
     });
 
-    // Add the new catalogue cards without rebuilding or modifying any existing game cards.
+    // Add the dynamic catalogue cards without rebuilding any existing game cards.
     renderGameCatalog();
     applySavedGameThumbnails();
     refreshThumbnailSelector();
@@ -3640,8 +3519,6 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
       })
       .finally(() => { loadSharedState(); });
 
-
-
     (function startSiteStats() {
       const statsUrl = "https://space-gules-three.vercel.app/api/stats";
       let visitorId = localStorage.getItem("spacearcades_visitor_id");
@@ -3664,8 +3541,8 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           document.getElementById("totalViews").textContent = Number(stats.totalViews || 0).toLocaleString();
         } catch (error) { console.warn("SpaceArcades stats unavailable:", error); }
       }
-    
-  updateStats(firstView);
+
+      updateStats(firstView);
       window.setInterval(() => updateStats(false), 30000);
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) updateStats(false);
