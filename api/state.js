@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { timingSafeEqual } from "node:crypto";
 
-const EMPTY = { customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {} };
+const EMPTY = { customGames: [], deletedGameIds: [], deletedGameTimes: {}, removedCustomGames: {}, thumbnails: {}, gameLinks: {}, gameTitles: {} };
 const RESTORE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
 
 function expireRestoreEntries(state) {
@@ -86,12 +86,30 @@ export default async function handler(req, res) {
 
     if (role === "admin") {
       const current = await readState();
+      const adminCreator = String(req.body.adminCreator || "").trim().toLowerCase();
+      const mine = game => !!adminCreator && String((game && game.creator) || "").trim().toLowerCase() === adminCreator;
       const previousGames = Array.isArray(current.state.customGames) ? current.state.customGames : [];
+      const previousById = new Map(previousGames.map(game => [game.id, game]));
       const incomingIds = new Set(state.customGames.map(g => g && g.id).filter(id => typeof id === "string"));
       const removedGames = previousGames.filter(game => game && typeof game.id === "string" && !incomingIds.has(game.id));
 
-      // Admins can remove only records in customGames. Built-in games are never
-      // stored in this list, so they cannot be removed through this endpoint.
+      // Admins may remove only games they added.
+      if (removedGames.some(game => !mine(game))) {
+        return res.status(403).json({ error: "Admins can remove only games they added." });
+      }
+      // Admins may edit only games they added, and new games must carry their own name.
+      for (const incoming of state.customGames) {
+        const previous = incoming && previousById.get(incoming.id);
+        if (!previous) {
+          if (!mine(incoming)) return res.status(403).json({ error: "New games must use your admin creator name." });
+          continue;
+        }
+        const changed = ["title", "url", "image", "creator"].some(field => (incoming[field] || "") !== (previous[field] || ""));
+        if (changed && !mine(previous)) {
+          return res.status(403).json({ error: "Admins can edit only games they added." });
+        }
+      }
+
       state.deletedGameIds = [...new Set([
         ...(current.state.deletedGameIds || []),
         ...removedGames.map(game => game.id)
@@ -102,18 +120,17 @@ export default async function handler(req, res) {
         state.deletedGameTimes[game.id] = Date.now();
         state.removedCustomGames[game.id] = game;
       }
-      state.thumbnails = { ...(current.state.thumbnails || {}), ...(state.thumbnails || {}) };
-      state.gameLinks = current.state.gameLinks || {};
-      const adminCreator = String(req.body.adminCreator || "").trim().toLowerCase();
-      const previousById = new Map(previousGames.map(game => [game.id, game]));
-      for (const incoming of state.customGames) {
-        const previous = incoming && previousById.get(incoming.id);
-        if (!previous) continue;
-        const changed = ["title", "url", "image"].some(field => (incoming[field] || "") !== (previous[field] || ""));
-        if (changed && (!adminCreator || String(previous.creator || "").trim().toLowerCase() !== adminCreator)) {
-          return res.status(403).json({ error: "Admins can edit only games matching their creator name." });
-        }
+
+      // Thumbnails: admins can add missing ones or change those of their own games.
+      const currentThumbs = current.state.thumbnails || {};
+      const ownIds = new Set(previousGames.filter(mine).map(game => game.id));
+      const thumbs = { ...currentThumbs };
+      for (const [key, src] of Object.entries(state.thumbnails || {})) {
+        if (!(key in currentThumbs) || ownIds.has(key)) thumbs[key] = src;
       }
+      state.thumbnails = thumbs;
+      state.gameLinks = current.state.gameLinks || {};
+      state.gameTitles = current.state.gameTitles || {};
     }
 
     if (JSON.stringify(state).length > 4_000_000) {
@@ -125,7 +142,8 @@ export default async function handler(req, res) {
       deletedGameTimes: state.deletedGameTimes && typeof state.deletedGameTimes === "object" ? state.deletedGameTimes : {},
       removedCustomGames: state.removedCustomGames && typeof state.removedCustomGames === "object" ? state.removedCustomGames : {},
       thumbnails: state.thumbnails && typeof state.thumbnails === "object" ? state.thumbnails : {},
-      gameLinks: role === "admin" ? (state.gameLinks || {}) : (state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {})
+      gameLinks: state.gameLinks && typeof state.gameLinks === "object" ? state.gameLinks : {},
+      gameTitles: state.gameTitles && typeof state.gameTitles === "object" ? state.gameTitles : {}
     };
     expireRestoreEntries(clean);
     await sql()`
