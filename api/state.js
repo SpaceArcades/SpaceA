@@ -165,6 +165,13 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.error("SpaceArcades database save error:", error);
-    return res.status(500).json({ error: "Could not save shared data: " + (error && error.message ? error.message : "unknown error") });
+    const detail = String(error && error.message ? error.message : "");
+    const quotaExceeded = /exceeded the quota|upgrade your plan to increase limits/i.test(detail);
+    if (quotaExceeded) {
+      return res.status(402).json({
+        error: "The shared database has reached its Neon plan quota. Game changes cannot be published until the database quota is increased or the database is moved to a plan with available capacity. No shared changes were saved."
+      });
+    }
+    return res.status(500).json({ error: "Could not save shared data. Please try again later." });
   }
 }

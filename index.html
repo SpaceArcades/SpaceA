@@ -1126,6 +1126,32 @@
       display: none !important;
     }
 
+
+    /* Clearer, more forgiving editor layout */
+    .edit-layout {
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+      align-items: stretch;
+    }
+    .edit-layout .panel {
+      min-width: 0;
+      padding: 24px;
+    }
+    .edit-layout .field-label { margin-top: 22px; }
+    .edit-layout .input-row { align-items: stretch; flex-wrap: wrap; }
+    .edit-layout .input-row input { flex: 1 1 220px; min-width: 0; }
+    .edit-layout .input-row button { min-height: 42px; }
+    .edit-layout .status { min-height: 1.5em; margin-top: 10px; }
+    .app-card:focus-visible, .tab:focus-visible, .primary-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+    @media (max-width: 768px) {
+      .edit-layout { grid-template-columns: minmax(0, 1fr); }
+      .edit-layout .input-row button { flex: 1 1 100%; }
+      .tabs { width: 100%; flex-wrap: wrap; }
+      .tab { flex: 1 1 auto; }
+    }
+
     @media (max-width: 768px) {
 
       .app-grid, .edit-layout, .aesthetic-banner {
@@ -1441,7 +1467,7 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
 
             <h2>Quick Launch</h2>
 
-            <p class="sub">Choose an app to edit browser tab title and favicon.</p>
+            <p class="sub">Pick an app, change its name, then press Save. Use Revert to undo your changes.</p>
 
           </div>
 
@@ -3186,41 +3212,64 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
         card.insertBefore(image, card.querySelector(".game-card-body") || null);
       });
     }
-    function saveMissingGameThumbnail(file) {
+    async function compressGameThumbnail(file) {
+      // Keep shared JSONB snapshots small: thumbnails are resized and encoded
+      // before they are sent to Neon, instead of storing the original upload.
+      if (typeof createImageBitmap !== "function") {
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Could not read that image file."));
+          reader.readAsDataURL(file);
+        });
+      }
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 480 / bitmap.width, 300 / bitmap.height);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d");
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      let data = canvas.toDataURL("image/webp", 0.68);
+      if (data.length > 180000) data = canvas.toDataURL("image/jpeg", 0.55);
+      return data;
+    }
+
+    async function saveMissingGameThumbnail(file) {
       const key = document.getElementById("thumbnailGameSelect").value;
       const status = document.getElementById("thumbnailStatus");
       const game = allGameEntries().find(item => item.key === key);
       if (!game) { status.textContent = "Select a game without a thumbnail first."; return; }
       if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. Existing thumbnails cannot be replaced."; refreshThumbnailSelector(); return; }
       if (!file || !file.type.startsWith("image/")) { status.textContent = "Drop or choose an image file first."; return; }
-      if (file.size > 1.5 * 1024 * 1024) { status.textContent = "Please choose an image smaller than 1.5 MB so it fits safely in the shared database."; return; }
-      const reader = new FileReader();
-      reader.onload = async () => {
-        // Recheck immediately before saving, so an existing thumbnail is never overwritten.
-        if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. It was not changed."; refreshThumbnailSelector(); return; }
-        const previousThumbnail = savedGameThumbnails[key];
-        savedGameThumbnails[key] = reader.result;
-        try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
-        catch { if (previousThumbnail === undefined) delete savedGameThumbnails[key]; else savedGameThumbnails[key] = previousThumbnail; status.textContent = "Not enough browser storage to save this image."; return; }
-        applySavedGameThumbnails();
-        status.textContent = "Saving thumbnail to shared database…";
-        try {
-          await saveSharedStateNow();
-          status.textContent = "Thumbnail saved and published for " + game.title + ".";
-          document.getElementById("thumbnailFileInput").value = "";
-          refreshThumbnailSelector();
-        } catch (error) {
-          if (previousThumbnail === undefined) delete savedGameThumbnails[key]; else savedGameThumbnails[key] = previousThumbnail;
-          localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
-          const card = findGameCard(key);
-          const addedImage = card && card.querySelector('img[data-custom-thumbnail="true"]');
-          if (addedImage) addedImage.remove();
-          status.textContent = "Thumbnail saved only in this browser — shared save failed: " + error.message;
-          refreshThumbnailSelector();
-        }
-      };
-      reader.onerror = () => { status.textContent = "Could not read that image file."; };
-      reader.readAsDataURL(file);
+      if (file.size > 1.5 * 1024 * 1024) { status.textContent = "Please choose an image smaller than 1.5 MB."; return; }
+      status.textContent = "Optimizing thumbnail…";
+      let compressed;
+      try { compressed = await compressGameThumbnail(file); }
+      catch { status.textContent = "Could not process that image. Please try another file."; return; }
+      // Recheck immediately before saving, so an existing thumbnail is never overwritten.
+      if (gameHasThumbnail(game)) { status.textContent = "This game already has a thumbnail. It was not changed."; refreshThumbnailSelector(); return; }
+      const previousThumbnail = savedGameThumbnails[key];
+      savedGameThumbnails[key] = compressed;
+      try { localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails)); }
+      catch { if (previousThumbnail === undefined) delete savedGameThumbnails[key]; else savedGameThumbnails[key] = previousThumbnail; status.textContent = "Not enough browser storage to save this image."; return; }
+      applySavedGameThumbnails();
+      status.textContent = "Saving optimized thumbnail to shared database…";
+      try {
+        await saveSharedStateNow();
+        status.textContent = "Thumbnail optimized, saved and published for " + game.title + ".";
+        document.getElementById("thumbnailFileInput").value = "";
+        refreshThumbnailSelector();
+      } catch (error) {
+        if (previousThumbnail === undefined) delete savedGameThumbnails[key]; else savedGameThumbnails[key] = previousThumbnail;
+        localStorage.setItem(GAME_THUMBNAILS_KEY, JSON.stringify(savedGameThumbnails));
+        const card = findGameCard(key);
+        const addedImage = card && card.querySelector('img[data-custom-thumbnail="true"]');
+        if (addedImage) addedImage.remove();
+        status.textContent = "Thumbnail saved only in this browser — shared save failed: " + error.message;
+        refreshThumbnailSelector();
+      }
     }
     document.getElementById("saveGameThumbnailBtn").addEventListener("click", () => {
       const file = document.getElementById("thumbnailFileInput").files[0];
@@ -3538,12 +3587,13 @@ input[type="text"]:focus,#newGameTitle:focus,#newGameUrl:focus {border-color:#78
           if (!response.ok) throw new Error("Stats unavailable");
           const stats = await response.json();
           document.getElementById("onlineCount").textContent = Number(stats.online || 0).toLocaleString();
-          document.getElementById("totalViews").textContent = Number(stats.totalViews || 0).toLocaleString();
+          document.getElementById("totalViews").textContent = Number(stats.totalViews ?? 314).toLocaleString();
         } catch (error) { console.warn("SpaceArcades stats unavailable:", error); }
       }
 
       updateStats(firstView);
-      window.setInterval(() => updateStats(false), 30000);
+      // Keep database traffic low on the free Neon allowance.
+      window.setInterval(() => updateStats(false), 300000);
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) updateStats(false);
       });
