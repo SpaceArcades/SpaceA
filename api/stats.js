@@ -26,14 +26,14 @@ export default async function handler(req, res) {
     // Idempotent setup keeps the counter independent of manual database changes.
     await db`CREATE TABLE IF NOT EXISTS site_stats (
       id INTEGER PRIMARY KEY,
-      total_views BIGINT NOT NULL DEFAULT 0
+      total_views BIGINT NOT NULL DEFAULT 314
     )`;
     await db`CREATE TABLE IF NOT EXISTS site_visitors (
       visitor_id TEXT PRIMARY KEY,
       last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`;
-    await db`INSERT INTO site_stats (id, total_views) VALUES (1, 0)
-      ON CONFLICT (id) DO NOTHING`;
+    await db`INSERT INTO site_stats (id, total_views) VALUES (1, 314)
+      ON CONFLICT (id) DO UPDATE SET total_views = GREATEST(site_stats.total_views, 314)`;
 
     const visitorId = String((req.body || {}).visitorId || "");
     if (!/^[a-zA-Z0-9-]{8,100}$/.test(visitorId)) {
